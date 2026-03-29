@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "mc-cli",
+	"version": "1.0.0",
+	"name": "MC CLI",
+	"description": "CLI tool for Minecraft",
+	"authors": [
+		"yadokari1130"
+	],
+	"contact": {
+		"homepage": "https://github.com/yadokari1130/MC-Redstone-AI",
+		"sources": "https://github.com/yadokari1130/MC-Redstone-AI"
+	},
+	"license": "MIT",
+	"icon": "assets/mc-cli/icon.png",
+
+	"entrypoints": {
+		"main": [
+			"com.yadokari1130.mccli.MCCLI"
+		]
+	},
+	"mixins": [
+		"mc-cli.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.5",
+		"minecraft": "~26.1",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

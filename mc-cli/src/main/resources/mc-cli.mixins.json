@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.yadokari1130.mccli.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"MCCLIMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
