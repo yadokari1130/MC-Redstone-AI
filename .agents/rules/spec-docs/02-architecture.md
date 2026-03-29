@@ -16,7 +16,7 @@ description: Redstone CLIのシステム構成図、技術スタック(Python, J
 - **Minecraft側**
   - 言語: Java
   - プラットフォーム: Fabric環境
-  - HTTPサーバー: 組み込みWebサーバー (JavalinやNettyなどを想定)
+  - HTTPサーバー: 組み込みWebサーバー (Javalin)
 - **動作環境**
   - Minecraftバージョン: 26.1
   - 実行環境: ローカル環境を想定
