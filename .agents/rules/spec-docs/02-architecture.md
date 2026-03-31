@@ -1,6 +1,6 @@
 ---
 trigger: model_decision
-description: Redstone CLIのシステム構成図、技術スタック(Python, Java/Fabric)、動作環境
+description: Redstone CLIのシステム構成図、技術スタック(Go, Java/Fabric)、動作環境
 ---
 
 # 2. システムアーキテクチャ・技術スタック

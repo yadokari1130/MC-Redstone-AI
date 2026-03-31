@@ -13,24 +13,24 @@
 
 ### 1. AIリソース群 (ワークフロー・スキル)
 AIエージェントに自律的な思考とレッドストーン設計の専門知識を与えるためのリソースです。
-- **workflows**: 回路の要件定義から設計・配置までのプロセスを、AIが順を追って実行するための手順書です。
-- **skills**: Minecraftの座標の扱い方やレッドストーン特有の複雑なブロック状態(BlockState)、特殊な設置手順などタスクを処理するための知識（プロンプトやルール）をまとめたものです。
+- **workflows**: AIが回路の要件定義から設計・配置までのプロセスを順を追って実行するための手順書です。
+- **skills**: AIが `mc-cli` を通じてMinecraftの世界を操作するためのツール定義（スキル）です。座標の扱い、ブロック状態(BlockState)の取得・配置などの専門知識が含まれます。
 
-### 2. Minecraftプラグイン (Java HTTPサーバー)
-Minecraftサーバー内部で軽量な機能特化型HTTPサーバーを立ち上げ、REST APIの形式でワールドのブロック情報を直接取得・配置・操作するためのシステムです。設置順序による回路崩壊などの問題を未然に防ぎ、安全かつ確実な状態取得・一括配置を実現します。
+### 2. Minecraftサーバー側 (Fabric Mod / HTTPサーバー)
+Minecraftサーバー(Fabric)上で動作するHTTPサーバーです。Javalinを使用してREST APIを提供し、ワールドのブロック情報を取得・配置・操作します。サーバーのメインスレッドで安全に処理を行い、FakePlayerを使用してバニラ同様のブロック操作（インタラクト）をエミュレートします。
 
-### 3. CLIツール (Python)
-AIエージェントとMinecraftプラグイン（HTTPサーバー）の間に立ち、中継および制御を行うCLIツールです。AIはここから提供される操作用コマンド (`get_blocks`, `place_blocks`, `interact_block`) を駆使して、安全かつ正確に環境を操作します。
+### 3. CLIツール (Go / Cobra)
+AIエージェントとMinecraftサーバーの間に立ち、中継および制御を行うCLIツールです。Go言語とCobraライブラリで実装されており、AIは提供される操作用コマンド (`get_blocks`, `place_blocks`, `interact_block`) を駆使して、安全かつ正確に環境を操作します。
 
 ## 詳細仕様書
 
 システムの具体的な要件やアーキテクチャについては、以下の仕様書ドキュメント群にまとめられています。
 
 - [総合仕様書・目次](.agents/rules/specification.md)
-  - 1. [はじめに](.agents/rules/spec-docs/01-introduction.md)
-  - 2. [システムアーキテクチャ・技術スタック](.agents/rules/spec-docs/02-architecture.md)
-  - 3. [機能要件詳細](.agents/rules/spec-docs/03-functional-requirements.md)
-  - 4. [Minecraftプラグイン APIインターフェース仕様](.agents/rules/spec-docs/04-api-specification.md)
-  - 5. [CLIコマンド (AI用) 仕様](.agents/rules/spec-docs/05-cli-commands.md)
-  - 6. [データモデル・JSON構造](.agents/rules/spec-docs/06-data-model.md)
-  - 7. [非機能要件・その他](.agents/rules/spec-docs/07-non-functional-requirements.md)
+  1. [はじめに](.agents/rules/spec-docs/01-introduction.md)
+  2. [システムアーキテクチャ・技術スタック](.agents/rules/spec-docs/02-architecture.md)
+  3. [機能要件詳細](.agents/rules/spec-docs/03-functional-requirements.md)
+  4. [Minecraftプラグイン APIインターフェース仕様](.agents/rules/spec-docs/04-api-specification.md)
+  5. [CLIコマンド (AI用) 仕様](.agents/rules/spec-docs/05-cli-commands.md)
+  6. [データモデル・JSON構造](.agents/rules/spec-docs/06-data-model.md)
+  7. [非機能要件・その他](.agents/rules/spec-docs/07-non-functional-requirements.md)
