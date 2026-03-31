@@ -6,13 +6,13 @@ description: Redstone CLIのシステム構成図、技術スタック(Python, J
 # 2. システムアーキテクチャ・技術スタック
 
 ## 2.1. システム構成図
-[ AI (LLM) ] <--(CLIコマンド実行)--> [ CLIツール (Python) ] <--(REST API)--> [ Minecraftプラグイン/Mod (Java/Kotlin) ] <--> [ Minecraft World ]
+[ AI (LLM) ] <--(CLIコマンド実行)--> [ CLIツール (Go) ] <--(REST API)--> [ Minecraftプラグイン/Mod (Java/Kotlin) ] <--> [ Minecraft World ]
 
 ## 2.2. 技術スタック
 - **CLIツール側**
-  - 言語: Python
-  - パッケージ管理: uv
-  - ライブラリ: `argparse` または `Typer` 等
+  - 言語: Go
+  - パッケージ管理: Go modules
+  - ライブラリ: Cobra (CLIフレームワーク)
 - **Minecraft側**
   - 言語: Java
   - プラットフォーム: Fabric環境

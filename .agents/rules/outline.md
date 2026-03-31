@@ -13,7 +13,7 @@
 
 ## システム構成
 本システムは2つのコンポーネントで構成されます。
-- **CLIツール**: AI向けにコマンドラインインターフェースを提供するPython製ツール。(利用技術: uv, argparseやTyper等)
+- **CLIツール**: AI向けにコマンドラインインターフェースを提供するGo製ツール。(利用技術: Go modules, Cobra等)
 - **Minecraftプラグイン**: HTTPサーバー(Javalin)を内蔵し、Minecraft APIを通じてワールドと直接連携するJava製プラグイン。
 
 ## 主要機能
