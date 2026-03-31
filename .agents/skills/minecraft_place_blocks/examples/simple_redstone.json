@@ -1,0 +1,30 @@
+[
+  {
+    "x": 0,
+    "y": 64,
+    "z": 0,
+    "block": "minecraft:lever",
+    "properties": {
+      "facing": "north",
+      "powered": "false"
+    }
+  },
+  {
+    "x": 0,
+    "y": 64,
+    "z": 1,
+    "block": "minecraft:redstone_wire",
+    "properties": {
+      "power": "0"
+    }
+  },
+  {
+    "x": 0,
+    "y": 64,
+    "z": 2,
+    "block": "minecraft:redstone_lamp",
+    "properties": {
+      "lit": "false"
+    }
+  }
+]
