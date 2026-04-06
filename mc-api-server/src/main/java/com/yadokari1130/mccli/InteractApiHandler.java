@@ -78,6 +78,9 @@ public class InteractApiHandler {
                 Vec3 hitPos = Vec3.atCenterOf(pos).add(0, 0.5, 0);
                 BlockHitResult hitResult = new BlockHitResult(hitPos, Direction.UP, pos, false);
 
+                // FakePlayerを対象位置の近辺へ移動（距離制限による失敗を防止）
+                fakePlayer.setPos(hitPos.x, hitPos.y, hitPos.z);
+
                 // バニラのuseWithoutItemメソッドを呼び出してインタラクトをエミュレート
                 // これはプレイヤーが素手（MainHand）でブロックを右クリックした際のロジックと同等
                 InteractionResult result = blockState.useWithoutItem(world, fakePlayer, hitResult);
