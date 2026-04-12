@@ -229,6 +229,56 @@ public class BlockApiHandler {
     }
 
     /**
+     * POST /api/update-blocks
+     * 指定された座標リストに対してブロックアップデートを強制実行する。
+     */
+    public void updateBlocks(Context ctx) throws Exception {
+        String body = ctx.body();
+        if (body == null || body.isBlank()) {
+            ctx.status(400).result("リクエストボディが空です。座標リストをJSON形式で送信してください。");
+            return;
+        }
+
+        Type listType = new TypeToken<List<BlockData>>() {}.getType();
+        List<BlockData> blocks;
+        try {
+            blocks = GSON.fromJson(body, listType);
+        } catch (Exception e) {
+            ctx.status(400).result("リクエストJSONの解析に失敗しました: " + e.getMessage());
+            return;
+        }
+
+        if (blocks == null || blocks.isEmpty()) {
+            ctx.status(400).result("座標リストが空です。");
+            return;
+        }
+
+        final List<BlockData> finalBlocks = blocks;
+
+        // メインスレッドでアップデートを実行
+        CompletableFuture<String> future = new CompletableFuture<>();
+        server.execute(() -> {
+            try {
+                Level world = server.overworld();
+                int count = 0;
+                for (BlockData b : finalBlocks) {
+                    BlockPos pos = new BlockPos(b.x, b.y, b.z);
+                    BlockState state = world.getBlockState(pos);
+                    // 隣接ブロックへの更新通知
+                    world.updateNeighborsAt(pos, state.getBlock());
+                    count++;
+                }
+                future.complete("OK: " + count + "個の座標でアップデートを実行しました。");
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+
+        String result = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        ctx.status(200).result(result);
+    }
+
+    /**
      * BlockStateに指定プロパティを適用する。
      * getPossibleValues() を使って文字列名を照合し、合致した値を setValue する。
      * 無効なプロパティ名/値の場合はそのままのstateを返す。

@@ -184,6 +184,30 @@ var placeBlocksCmd = &cobra.Command{
 			return
 		}
 
+		// 6. ブロックアップデート
+		var updateBlocks []model.BlockData
+		updateBlocks = append(updateBlocks, req.Blocks...)
+		updateBlocks = append(updateBlocks, attachesBlocks...)
+		updateBlocks = append(updateBlocks, connectsBlocks...)
+
+		if len(updateBlocks) > 0 {
+			// 重複排除（同じ座標を何度もアップデートしないようにする）
+			uniqueBlocks := make([]model.BlockData, 0)
+			seen := make(map[string]bool)
+			for _, b := range updateBlocks {
+				key := fmt.Sprintf("%d,%d,%d", b.X, b.Y, b.Z)
+				if !seen[key] {
+					seen[key] = true
+					uniqueBlocks = append(uniqueBlocks, model.BlockData{X: b.X, Y: b.Y, Z: b.Z})
+				}
+			}
+
+			if err := sendUpdateBlocks(uniqueBlocks); err != nil {
+				printError(fmt.Sprintf("ブロックアップデートに失敗しました: %v", err))
+				return
+			}
+		}
+
 		printJSON(model.CommandResult{
 			Success: true,
 			Message: "ブロックの配置に成功しました",
@@ -227,6 +251,35 @@ func sendBlocks(blocks []model.BlockData) error {
 	}
 
 	urlStr := fmt.Sprintf("%s/api/blocks", serverURL)
+	resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+func sendUpdateBlocks(blocks []model.BlockData) error {
+	if len(blocks) == 0 {
+		return nil
+	}
+
+	data, err := json.Marshal(blocks)
+	if err != nil {
+		return err
+	}
+
+	urlStr := fmt.Sprintf("%s/api/update-blocks", serverURL)
 	resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
