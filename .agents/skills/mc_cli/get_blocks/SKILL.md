@@ -17,38 +17,58 @@ description: Minecraft の世界から指定した範囲のブロック情報を
 
 ### 引数
 - `--x1, --y1, --z1`: 範囲の開始座標（整数）。
-- `--x2, --y2, --z2`: 範囲の終了座標（整数）。
+- `--x2, --y2, --z2`: 範囲의 終了座標（整数）。
+- `--interval`: (任意) 実行間隔（ゲームチック、1=50ms）。デフォルトは `0`。
+- `--count`: (任意) 実行回数。デフォルトは `1`。
 - `--url`: (任意) サーバーの URL。デフォルトは `http://localhost:8080`。
 
 ## 出力形式
 
 コマンドの実行結果は、解析しやすいように JSON 形式で出力されます。
+`data` フィールドには、各実行回ごとのブロックデータリストを格納した**二次元配列**（`[][]BlockData`）がセットされます。
 
-### 成功時のレスポンス例
+### 成功時のレスポンス例 (`count=1` の場合)
 ```json
 {
   "success": true,
   "data": [
-    {
-      "x": 100,
-      "y": 64,
-      "z": 100,
-      "block": "minecraft:stone",
-      "properties": {}
-    },
-    {
-      "x": 101,
-      "y": 64,
-      "z": 100,
-      "block": "minecraft:redstone_wire",
-      "properties": {
-        "power": "15",
-        "north": "side",
-        "south": "side",
-        "east": "none",
-        "west": "none"
+    [
+      {
+        "x": 100,
+        "y": 64,
+        "z": 100,
+        "block": "minecraft:stone",
+        "properties": {}
+      },
+      {
+        "x": 101,
+        "y": 64,
+        "z": 100,
+        "block": "minecraft:redstone_wire",
+        "properties": {
+          "power": "15",
+          "north": "side",
+          "south": "side",
+          "east": "none",
+          "west": "none"
+        }
       }
-    }
+    ]
+  ]
+}
+```
+
+### 成功時のレスポンス例 (`count=2, interval=10` の場合)
+```json
+{
+  "success": true,
+  "data": [
+    [
+      { "x": 100, "y": 64, "z": 100, "block": "minecraft:redstone_wire", "properties": { "power": "0" } }
+    ],
+    [
+      { "x": 100, "y": 64, "z": 100, "block": "minecraft:redstone_wire", "properties": { "power": "15" } }
+    ]
   ]
 }
 ```
