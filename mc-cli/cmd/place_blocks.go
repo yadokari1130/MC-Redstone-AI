@@ -109,24 +109,46 @@ var placeBlocksCmd = &cobra.Command{
 		// 3. attaches 計算
 		var attachesBlocks []model.BlockData
 		for _, a := range req.Attaches {
-			facing := ""
-			if a.ComponentX > a.BaseX {
-				facing = "east"
-			} else if a.ComponentX < a.BaseX {
-				facing = "west"
-			} else if a.ComponentZ > a.BaseZ {
-				facing = "south"
-			} else if a.ComponentZ < a.BaseZ {
-				facing = "north"
-			} else if a.ComponentY > a.BaseY {
-				facing = "up"
-			} else if a.ComponentY < a.BaseY {
-				facing = "down"
-			}
-
 			state := make(map[string]string)
-			if facing != "" {
-				state["facing"] = facing
+
+			// ブロックの種類によってプロパティを使い分ける (faceプロパティを持つタイプ)
+			isFaceType := strings.Contains(a.Component, "lever") || strings.Contains(a.Component, "button") || strings.Contains(a.Component, "grindstone")
+
+			if a.ComponentY > a.BaseY {
+				// 上面 (floor)
+				if isFaceType {
+					state["face"] = "floor"
+					state["facing"] = "north" // デフォルトの向き
+				} else {
+					state["facing"] = "up"
+				}
+			} else if a.ComponentY < a.BaseY {
+				// 下面 (ceiling)
+				if isFaceType {
+					state["face"] = "ceiling"
+					state["facing"] = "north" // デフォルトの向き
+				} else {
+					state["facing"] = "down"
+				}
+			} else {
+				// 側面 (wall)
+				facing := ""
+				if a.ComponentX > a.BaseX {
+					facing = "east"
+				} else if a.ComponentX < a.BaseX {
+					facing = "west"
+				} else if a.ComponentZ > a.BaseZ {
+					facing = "south"
+				} else if a.ComponentZ < a.BaseZ {
+					facing = "north"
+				}
+
+				if facing != "" {
+					if isFaceType {
+						state["face"] = "wall"
+					}
+					state["facing"] = facing
+				}
 			}
 
 			attachesBlocks = append(attachesBlocks, model.BlockData{
