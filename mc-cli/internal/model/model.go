@@ -43,6 +43,28 @@ type InteractionRequest struct {
 	Z int `json:"z"`
 }
 
+// ItemInfo はドロップするアイテムの情報（IDと数量）を表します。
+type ItemInfo struct {
+	ID     string `json:"id"`
+	Amount int    `json:"amount"`
+}
+
+// DropItemsRequest はアイテムドロップのリクエストを表します。
+type DropItemsRequest struct {
+	X     float64    `json:"x"`
+	Y     float64    `json:"y"`
+	Z     float64    `json:"z"`
+	Items []ItemInfo `json:"items"`
+}
+
+// InventoryRequest はインベントリ設定のリクエストを表します。
+type InventoryRequest struct {
+	X     int        `json:"x"`
+	Y     int        `json:"y"`
+	Z     int        `json:"z"`
+	Items []ItemInfo `json:"items"`
+}
+
 // CommandResult はコマンドの実行結果をAIがパースしやすい形式で表します。
 type CommandResult struct {
 	Success bool   `json:"success"`

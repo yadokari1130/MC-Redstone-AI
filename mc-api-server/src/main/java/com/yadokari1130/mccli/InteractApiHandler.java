@@ -5,15 +5,23 @@ import com.mojang.authlib.GameProfile;
 import io.javalin.http.Context;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -108,6 +116,62 @@ public class InteractApiHandler {
         }
     }
 
+    public void dropItems(Context ctx) {
+        String body = ctx.body();
+        if (body == null || body.isBlank()) {
+            ctx.status(400).result("リクエストボディが空です。{\"x\":...,\"y\":...,\"z\":...} 形式で送信してください。");
+            return;
+        }
+
+        DropItemsRequest request;
+        try {
+            request = GSON.fromJson(body, DropItemsRequest.class);
+        } catch (Exception e) {
+            ctx.status(400).result("リクエストJSONの解析に失敗しました: " + e.getMessage());
+            return;
+        }
+
+        final DropItemsRequest finalRequest = request;
+
+        ServerLevel world = server.overworld();
+
+        List<String> errors = new ArrayList<>();
+
+        for(DropItemsRequest.Item dropItem : finalRequest.items) {
+            String itemIdStr = dropItem.id;
+            int amount = dropItem.amount;
+        
+            Identifier itemId = Identifier.tryParse(itemIdStr);
+            if (itemId == null || !BuiltInRegistries.ITEM.containsKey(itemId)) {
+                errors.add(String.format("不明なアイテム識別子 '%s'", itemIdStr));
+                continue;
+            }
+
+            Optional<Item> itemOpt = BuiltInRegistries.ITEM.get(itemId).map(h -> h.value());
+            if (itemOpt.isEmpty()) {
+                errors.add(String.format("不明なアイテム識別子 '%s'", itemIdStr));
+                continue;
+            }
+
+            Item item = itemOpt.get();
+            
+            // 3. 取得したItemを使ってItemStackを作成（例：1個）
+            ItemStack stackToDrop = new ItemStack(item, amount);
+            
+            ItemEntity itemEntity = new ItemEntity(world, finalRequest.x, finalRequest.y, finalRequest.z, stackToDrop);
+            itemEntity.setDefaultPickUpDelay();
+            itemEntity.setDeltaMovement(Vec3.ZERO);
+            world.addFreshEntity(itemEntity);
+        }
+
+        if (!errors.isEmpty()) {
+            ctx.status(400).result(String.join(", ", errors));
+            return;
+        }
+
+        ctx.status(200).result("アイテムをドロップしました。");
+    }
+
     /**
      * FakePlayerを生成する。
      * Carpet Modで実績のある手法に基づき、固定UUID/GameProfileで ServerPlayer を生成する。
@@ -132,5 +196,17 @@ public class InteractApiHandler {
         public int y;
         /** Z座標 */
         public int z;
+    }
+
+    private static class DropItemsRequest {
+        public double x;
+        public double y;
+        public double z;
+        public List<Item> items;
+
+        class Item {
+            public String id;
+            public int amount;
+        }
     }
 }

@@ -30,6 +30,7 @@ public class HttpServer {
 
         BlockApiHandler blockApiHandler = new BlockApiHandler(minecraftServer);
         InteractApiHandler interactApiHandler = new InteractApiHandler(minecraftServer);
+        InventoryApiHandler inventoryApiHandler = new InventoryApiHandler(minecraftServer);
 
         app = Javalin.create().start(PORT);
 
@@ -43,6 +44,12 @@ public class HttpServer {
 
         /** FakePlayerによるインタラクトを実行する */
         app.post("/api/interact", interactApiHandler::interact);
+
+        /** アイテムをドロップする */
+        app.post("/api/drop-items", interactApiHandler::dropItems);
+
+        /** インベントリの内容を設定する */
+        app.post("/api/inventory", inventoryApiHandler::setInventory);
 
         // グローバル例外ハンドラ
         app.exception(Exception.class, (e, ctx) -> {
