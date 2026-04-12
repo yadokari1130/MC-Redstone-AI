@@ -180,6 +180,20 @@ var placeBlocksCmd = &cobra.Command{
 
 			state := make(map[string]string)
 			if facing != "" {
+				// リピーターとコンパレーターは facing が「入力側（背面）」を指すため、
+				// from -> to の向き（＝出力方向）とは逆に設定する必要がある。
+				if strings.Contains(c.Component, "repeater") || strings.Contains(c.Component, "comparator") {
+					switch facing {
+					case "north":
+						facing = "south"
+					case "south":
+						facing = "north"
+					case "east":
+						facing = "west"
+					case "west":
+						facing = "east"
+					}
+				}
 				state["facing"] = facing
 			}
 
