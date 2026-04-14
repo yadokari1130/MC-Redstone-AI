@@ -33,26 +33,8 @@ description: Minecraft の世界から指定した範囲のブロック情報を
   "success": true,
   "data": [
     [
-      {
-        "x": 100,
-        "y": 64,
-        "z": 100,
-        "block": "minecraft:stone",
-        "properties": {}
-      },
-      {
-        "x": 101,
-        "y": 64,
-        "z": 100,
-        "block": "minecraft:redstone_wire",
-        "properties": {
-          "power": "15",
-          "north": "side",
-          "south": "side",
-          "east": "none",
-          "west": "none"
-        }
-      }
+      ["minecraft:stone", [100, 64, 100], {}],
+      ["minecraft:redstone_wire", [101, 64, 100], {"power": "15", "north": "side", "south": "side"}]
     ]
   ]
 }
@@ -64,14 +46,22 @@ description: Minecraft の世界から指定した範囲のブロック情報を
   "success": true,
   "data": [
     [
-      { "x": 100, "y": 64, "z": 100, "block": "minecraft:redstone_wire", "properties": { "power": "0" } }
+      ["minecraft:redstone_wire", [100, 64, 100], {"power": "0"}]
     ],
     [
-      { "x": 100, "y": 64, "z": 100, "block": "minecraft:redstone_wire", "properties": { "power": "15" } }
+      ["minecraft:redstone_wire", [100, 64, 100], {"power": "15"}]
     ]
   ]
 }
 ```
+
+### データの構造
+各ブロックの情報は、以下の順序の配列として表現されます。
+`[BlockID, [X, Y, Z], Properties]`
+
+- `BlockID`: ブロックの種類を表す文字列。
+- `[X, Y, Z]`: ブロックの絶対座標を表す数値配列。
+- `Properties`: ブロックの状態を表すオブジェクト。
 
 ### プロパティの解説
 - `x, y, z`: ブロックの絶対座標。

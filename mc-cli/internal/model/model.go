@@ -9,6 +9,11 @@ type BlockData struct {
 	State map[string]string `json:"state,omitempty"`
 }
 
+// ToCompact は [Block, [X, Y, Z], State] の形式に変換します。
+func (b BlockData) ToCompact() any {
+	return []any{b.Block, []int{b.X, b.Y, b.Z}, b.State}
+}
+
 type AttachesData struct {
 	ComponentX int    `json:"component_x"`
 	ComponentY int    `json:"component_y"`
@@ -19,6 +24,11 @@ type AttachesData struct {
 	BaseZ      int    `json:"base_z"`
 }
 
+// ToCompact は [Component, [ComponentX, ComponentY, ComponentZ], [BaseX, BaseY, BaseZ]] の形式に変換します。
+func (a AttachesData) ToCompact() any {
+	return []any{a.Component, []int{a.ComponentX, a.ComponentY, a.ComponentZ}, []int{a.BaseX, a.BaseY, a.BaseZ}}
+}
+
 type ConnectsData struct {
 	FromX     int    `json:"from_x"`
 	FromY     int    `json:"from_y"`
@@ -27,6 +37,11 @@ type ConnectsData struct {
 	ToY       int    `json:"to_y"`
 	ToZ       int    `json:"to_z"`
 	Component string `json:"component"`
+}
+
+// ToCompact は [Component, [FromX, FromY, FromZ], [ToX, ToY, ToZ]] の形式に変換します。
+func (c ConnectsData) ToCompact() any {
+	return []any{c.Component, []int{c.FromX, c.FromY, c.FromZ}, []int{c.ToX, c.ToY, c.ToZ}}
 }
 
 type PlaceRequest struct {
