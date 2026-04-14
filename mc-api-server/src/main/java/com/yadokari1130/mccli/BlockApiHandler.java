@@ -264,8 +264,9 @@ public class BlockApiHandler {
                 for (BlockData b : finalBlocks) {
                     BlockPos pos = new BlockPos(b.x, b.y, b.z);
                     BlockState state = world.getBlockState(pos);
-                    // 隣接ブロックへの更新通知
-                    world.updateNeighborsAt(pos, state.getBlock());
+                    // 自分自身を強制的に再設定して接続（配線）を計算し直させる
+                    // 3 = UPDATE_NEIGHBORS | UPDATE_CLIENTS, 16 = FORCE_STATE
+                    world.setBlock(pos, state, 3 | 16);
                     count++;
                 }
                 future.complete("OK: " + count + "個の座標でアップデートを実行しました。");
