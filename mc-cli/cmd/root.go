@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"mc-cli/internal/model"
 	"github.com/spf13/cobra"
@@ -106,6 +108,40 @@ func printError(msg string) {
 	b, _ := json.Marshal(result)
 	fmt.Println(string(b))
 	os.Exit(1)
+}
+
+// parsePos は "x,y,z" 形式の文字列を []int に変換します。
+func parsePos(s string) ([]int, error) {
+	parts := strings.Split(s, ",")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("座標は x,y,z の3要素で指定してください")
+	}
+	res := make([]int, 3)
+	for i, p := range parts {
+		v, err := strconv.Atoi(strings.TrimSpace(p))
+		if err != nil {
+			return nil, fmt.Errorf("座標の数値パース失敗: %v", err)
+		}
+		res[i] = v
+	}
+	return res, nil
+}
+
+// parsePosF は "x,y,z" 形式の文字列を []float64 に変換します。
+func parsePosF(s string) ([]float64, error) {
+	parts := strings.Split(s, ",")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("座標は x,y,z の3要素で指定してください")
+	}
+	res := make([]float64, 3)
+	for i, p := range parts {
+		v, err := strconv.ParseFloat(strings.TrimSpace(p), 64)
+		if err != nil {
+			return nil, fmt.Errorf("座標の数値パース失敗: %v", err)
+		}
+		res[i] = v
+	}
+	return res, nil
 }
 
 

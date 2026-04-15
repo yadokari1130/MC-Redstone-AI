@@ -55,12 +55,12 @@ var placeBlocksCmd = &cobra.Command{
 			maxX, maxY, maxZ := math.MinInt32, math.MinInt32, math.MinInt32
 
 			for _, a := range req.Attaches {
-				if a.BaseX < minX { minX = a.BaseX }
-				if a.BaseY < minY { minY = a.BaseY }
-				if a.BaseZ < minZ { minZ = a.BaseZ }
-				if a.BaseX > maxX { maxX = a.BaseX }
-				if a.BaseY > maxY { maxY = a.BaseY }
-				if a.BaseZ > maxZ { maxZ = a.BaseZ }
+				if a.Base[0] < minX { minX = a.Base[0] }
+				if a.Base[1] < minY { minY = a.Base[1] }
+				if a.Base[2] < minZ { minZ = a.Base[2] }
+				if a.Base[0] > maxX { maxX = a.Base[0] }
+				if a.Base[1] > maxY { maxY = a.Base[1] }
+				if a.Base[2] > maxZ { maxZ = a.Base[2] }
 			}
 
 			blocks, err := getBlocksRange(minX, minY, minZ, maxX, maxY, maxZ)
@@ -81,10 +81,10 @@ var placeBlocksCmd = &cobra.Command{
 			}
 
 			for _, a := range req.Attaches {
-				key := fmt.Sprintf("%d,%d,%d", a.BaseX, a.BaseY, a.BaseZ)
+				key := fmt.Sprintf("%d,%d,%d", a.Base[0], a.Base[1], a.Base[2])
 				b, ok := blockMap[key]
 				if !ok || strings.Contains(b, "air") {
-					printError(fmt.Sprintf("ベースブロックが存在しません: x=%d, y=%d, z=%d", a.BaseX, a.BaseY, a.BaseZ))
+					printError(fmt.Sprintf("ベースブロックが存在しません: x=%d, y=%d, z=%d", a.Base[0], a.Base[1], a.Base[2]))
 					return
 				}
 			}
@@ -92,16 +92,16 @@ var placeBlocksCmd = &cobra.Command{
 
 		// 2. connects バリデーション
 		for _, c := range req.Connects {
-			distX := int(math.Abs(float64(c.FromX - c.ToX)))
-			distY := int(math.Abs(float64(c.FromY - c.ToY)))
-			distZ := int(math.Abs(float64(c.FromZ - c.ToZ)))
+			distX := int(math.Abs(float64(c.From[0] - c.To[0])))
+			distY := int(math.Abs(float64(c.From[1] - c.To[1])))
+			distZ := int(math.Abs(float64(c.From[2] - c.To[2])))
 
 			if (distX == 2 && distY == 0 && distZ == 0) ||
 				(distX == 0 && distY == 2 && distZ == 0) ||
 				(distX == 0 && distY == 0 && distZ == 2) {
 				// OK
 			} else {
-				printError(fmt.Sprintf("connects の from と to の間がちょうど1マスではありません: from=(%d,%d,%d), to=(%d,%d,%d)", c.FromX, c.FromY, c.FromZ, c.ToX, c.ToY, c.ToZ))
+				printError(fmt.Sprintf("connects の from と to の間がちょうど1マスではありません: from=(%d,%d,%d), to=(%d,%d,%d)", c.From[0], c.From[1], c.From[2], c.To[0], c.To[1], c.To[2]))
 				return
 			}
 		}
@@ -117,7 +117,7 @@ var placeBlocksCmd = &cobra.Command{
 			// レッドストーントーチの判定
 			isTorch := strings.Contains(component, "redstone_torch") || strings.Contains(component, "redstone_wall_torch")
 
-			if a.ComponentY > a.BaseY {
+			if a.Pos[1] > a.Base[1] {
 				// 上面 (floor)
 				if isFaceType {
 					state["face"] = "floor"
@@ -128,7 +128,7 @@ var placeBlocksCmd = &cobra.Command{
 				} else {
 					state["facing"] = "up"
 				}
-			} else if a.ComponentY < a.BaseY {
+			} else if a.Pos[1] < a.Base[1] {
 				// 下面 (ceiling)
 				if isFaceType {
 					state["face"] = "ceiling"
@@ -142,13 +142,13 @@ var placeBlocksCmd = &cobra.Command{
 			} else {
 				// 側面 (wall)
 				facing := ""
-				if a.ComponentX > a.BaseX {
+				if a.Pos[0] > a.Base[0] {
 					facing = "east"
-				} else if a.ComponentX < a.BaseX {
+				} else if a.Pos[0] < a.Base[0] {
 					facing = "west"
-				} else if a.ComponentZ > a.BaseZ {
+				} else if a.Pos[2] > a.Base[2] {
 					facing = "south"
-				} else if a.ComponentZ < a.BaseZ {
+				} else if a.Pos[2] < a.Base[2] {
 					facing = "north"
 				}
 
@@ -163,9 +163,9 @@ var placeBlocksCmd = &cobra.Command{
 			}
 
 			attachesBlocks = append(attachesBlocks, model.BlockData{
-				X:     a.ComponentX,
-				Y:     a.ComponentY,
-				Z:     a.ComponentZ,
+				X:     a.Pos[0],
+				Y:     a.Pos[1],
+				Z:     a.Pos[2],
 				Block: component,
 				State: state,
 			})
@@ -175,17 +175,17 @@ var placeBlocksCmd = &cobra.Command{
 		var connectsBlocks []model.BlockData
 		for _, c := range req.Connects {
 			facing := ""
-			if c.ToX > c.FromX {
+			if c.To[0] > c.From[0] {
 				facing = "east"
-			} else if c.ToX < c.FromX {
+			} else if c.To[0] < c.From[0] {
 				facing = "west"
-			} else if c.ToZ > c.FromZ {
+			} else if c.To[2] > c.From[2] {
 				facing = "south"
-			} else if c.ToZ < c.FromZ {
+			} else if c.To[2] < c.From[2] {
 				facing = "north"
-			} else if c.ToY > c.FromY {
+			} else if c.To[1] > c.From[1] {
 				facing = "up"
-			} else if c.ToY < c.FromY {
+			} else if c.To[1] < c.From[1] {
 				facing = "down"
 			}
 
@@ -195,9 +195,9 @@ var placeBlocksCmd = &cobra.Command{
 			}
 
 			connectsBlocks = append(connectsBlocks, model.BlockData{
-				X:     (c.FromX + c.ToX) / 2,
-				Y:     (c.FromY + c.ToY) / 2,
-				Z:     (c.FromZ + c.ToZ) / 2,
+				X:     (c.From[0] + c.To[0]) / 2,
+				Y:     (c.From[1] + c.To[1]) / 2,
+				Z:     (c.From[2] + c.To[2]) / 2,
 				Block: c.Component,
 				State: state,
 			})

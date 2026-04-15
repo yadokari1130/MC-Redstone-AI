@@ -12,22 +12,30 @@ import (
 )
 
 var (
-	x1, y1, z1 int
-	x2, y2, z2 int
-	interval   int
-	count      int
+	gbPos1Str, gbPos2Str string
+	interval             int
+	count                int
 )
 
 var getBlocksCmd = &cobra.Command{
 	Use:   "get-blocks",
 	Short: "指定された座標範囲のブロック状況を取得する",
-	Long:  `指定された (x1, y1, z1) から (x2, y2, z2) までの範囲に含まれるブロックの情報を取得します。`,
+	Long:  `指定された --pos1 から --pos2 までの範囲に含まれるブロックの情報を取得します。`,
 	Run: func(cmd *cobra.Command, args []string) {
+		pos1, err := parsePos(gbPos1Str)
+		if err != nil {
+			printError(err.Error())
+		}
+		pos2, err := parsePos(gbPos2Str)
+		if err != nil {
+			printError(err.Error())
+		}
+
 		var allResults [][]model.BlockData
 
 		for i := 0; i < count; i++ {
 			url := fmt.Sprintf("%s/api/blocks?x1=%d&y1=%d&z1=%d&x2=%d&y2=%d&z2=%d",
-				serverURL, x1, y1, z1, x2, y2, z2)
+				serverURL, pos1[0], pos1[1], pos1[2], pos2[0], pos2[1], pos2[2])
 
 			resp, err := http.Get(url)
 			if err != nil {
@@ -70,12 +78,8 @@ var getBlocksCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(getBlocksCmd)
 
-	getBlocksCmd.Flags().IntVar(&x1, "x1", 0, "開始 X 座標")
-	getBlocksCmd.Flags().IntVar(&y1, "y1", 0, "開始 Y 座標")
-	getBlocksCmd.Flags().IntVar(&z1, "z1", 0, "開始 Z 座標")
-	getBlocksCmd.Flags().IntVar(&x2, "x2", 0, "終了 X 座標")
-	getBlocksCmd.Flags().IntVar(&y2, "y2", 0, "終了 Y 座標")
-	getBlocksCmd.Flags().IntVar(&z2, "z2", 0, "終了 Z 座標")
+	getBlocksCmd.Flags().StringVar(&gbPos1Str, "pos1", "0,0,0", "開始座標 [x,y,z]")
+	getBlocksCmd.Flags().StringVar(&gbPos2Str, "pos2", "0,0,0", "終了座標 [x,y,z]")
 	getBlocksCmd.Flags().IntVar(&interval, "interval", 0, "ゲームチック間隔 (1チック=50ms)")
 	getBlocksCmd.Flags().IntVar(&count, "count", 1, "実行回数")
 }

@@ -13,19 +13,24 @@ import (
 )
 
 var (
-	xi, yi, zi                             int
-	ix1, iy1, iz1, ix2, iy2, iz2, idelay int
+	ibPosStr, ibPos1Str, ibPos2Str string
+	idelay                         int
 )
 
 var interactBlockCmd = &cobra.Command{
 	Use:   "interact-block",
 	Short: "指定した座標のブロックを操作する",
-	Long:  `指定した (x, y, z) 座標にあるブロック（レバー、ボタンなど）に対してインタラクト操作を実行します。`,
+	Long:  `指定した --pos 座標にあるブロック（レバー、ボタンなど）に対してインタラクト操作を実行します。`,
 	Run: func(cmd *cobra.Command, args []string) {
+		pos, err := parsePos(ibPosStr)
+		if err != nil {
+			printError(err.Error())
+		}
+
 		req := model.InteractionRequest{
-			X: xi,
-			Y: yi,
-			Z: zi,
+			X: pos[0],
+			Y: pos[1],
+			Z: pos[2],
 		}
 
 		jsonData, err := json.Marshal(req)
@@ -53,13 +58,22 @@ var interactBlockCmd = &cobra.Command{
 			return
 		}
 
-		if cmd.Flags().Changed("x1") {
+		if cmd.Flags().Changed("pos1") {
 			if idelay > 0 {
 				time.Sleep(time.Duration(idelay) * 50 * time.Millisecond)
 			}
 
+			pos1, err := parsePos(ibPos1Str)
+			if err != nil {
+				printError(err.Error())
+			}
+			pos2, err := parsePos(ibPos2Str)
+			if err != nil {
+				printError(err.Error())
+			}
+
 			blocksUrl := fmt.Sprintf("%s/api/blocks?x1=%d&y1=%d&z1=%d&x2=%d&y2=%d&z2=%d",
-				serverURL, ix1, iy1, iz1, ix2, iy2, iz2)
+				serverURL, pos1[0], pos1[1], pos1[2], pos2[0], pos2[1], pos2[2])
 
 			blocksResp, err := http.Get(blocksUrl)
 			if err != nil {
@@ -102,15 +116,9 @@ var interactBlockCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(interactBlockCmd)
 
-	interactBlockCmd.Flags().IntVar(&xi, "x", 0, "対象の X 座標")
-	interactBlockCmd.Flags().IntVar(&yi, "y", 0, "対象の Y 座標")
-	interactBlockCmd.Flags().IntVar(&zi, "z", 0, "対象の Z 座標")
+	interactBlockCmd.Flags().StringVar(&ibPosStr, "pos", "0,0,0", "対象の座標 [x,y,z]")
 
-	interactBlockCmd.Flags().IntVar(&ix1, "x1", 0, "取得範囲の開始 X 座標")
-	interactBlockCmd.Flags().IntVar(&iy1, "y1", 0, "取得範囲の開始 Y 座標")
-	interactBlockCmd.Flags().IntVar(&iz1, "z1", 0, "取得範囲の開始 Z 座標")
-	interactBlockCmd.Flags().IntVar(&ix2, "x2", 0, "取得範囲の終了 X 座標")
-	interactBlockCmd.Flags().IntVar(&iy2, "y2", 0, "取得範囲の終了 Y 座標")
-	interactBlockCmd.Flags().IntVar(&iz2, "z2", 0, "取得範囲の終了 Z 座標")
+	interactBlockCmd.Flags().StringVar(&ibPos1Str, "pos1", "0,0,0", "取得範囲の開始座標 [x,y,z]")
+	interactBlockCmd.Flags().StringVar(&ibPos2Str, "pos2", "0,0,0", "取得範囲の終了座標 [x,y,z]")
 	interactBlockCmd.Flags().IntVar(&idelay, "delay", 0, "操作後の待機時間 (ゲームチック単位)")
 }

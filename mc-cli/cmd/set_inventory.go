@@ -14,18 +14,21 @@ import (
 )
 
 var (
-	invX, invY, invZ int
-	invItemsInput    string
+	invPosStr     string
+	invItemsInput string
 )
 
 var setInventoryCmd = &cobra.Command{
 	Use:   "set-inventory",
 	Short: "ブロックのインベントリにアイテムをセットする",
-	Long:  `指定された座標にあるブロックのインベントリにアイテムをセットします。既存のアイテムは消去されます。`,
+	Long:  `指定された --pos 座標にあるブロックのインベントリにアイテムをセットします。既存のアイテムは消去されます。`,
 	Run: func(cmd *cobra.Command, args []string) {
+		pos, err := parsePos(invPosStr)
+		if err != nil {
+			printError(err.Error())
+		}
 		var items []model.ItemInfo
-		var err error
-
+		// ... (reading itemsInput logic)
 		if invItemsInput != "" {
 			var inputData []byte
 			if strings.HasPrefix(invItemsInput, "@") {
@@ -51,12 +54,12 @@ var setInventoryCmd = &cobra.Command{
 		// ただし、もし --items が指定されなかった場合は明示的に空として扱う
 
 		req := model.InventoryRequest{
-			X:     invX,
-			Y:     invY,
-			Z:     invZ,
+			X:     pos[0],
+			Y:     pos[1],
+			Z:     pos[2],
 			Items: items,
 		}
-
+// ... (rest same)
 		jsonData, err := json.Marshal(req)
 		if err != nil {
 			printError(fmt.Sprintf("JSON エンコード失敗: %v", err))
@@ -92,8 +95,6 @@ var setInventoryCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(setInventoryCmd)
 
-	setInventoryCmd.Flags().IntVar(&invX, "x", 0, "対象ブロックの X 座標")
-	setInventoryCmd.Flags().IntVar(&invY, "y", 0, "対象ブロックの Y 座標")
-	setInventoryCmd.Flags().IntVar(&invZ, "z", 0, "対象ブロック의 Z 座標")
+	setInventoryCmd.Flags().StringVar(&invPosStr, "pos", "0,0,0", "対象ブロックの座標 [x,y,z]")
 	setInventoryCmd.Flags().StringVar(&invItemsInput, "items", "[]", "アイテム情報の JSON 配列（[{\"id\":\"...\",\"amount\":...}, ...]）、または @file.json 形式のパス")
 }

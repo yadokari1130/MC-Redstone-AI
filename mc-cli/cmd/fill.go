@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"mc-cli/internal/model"
 	"github.com/spf13/cobra"
@@ -15,24 +14,21 @@ import (
 var fillStateInput string
 
 var fillCmd = &cobra.Command{
-	Use:   "fill <x1> <y1> <z1> <x2> <y2> <z2> <block>",
+	Use:   "fill <pos1> <pos2> <block>",
 	Short: "指定された範囲を特定のブロックで埋める",
-	Long:  `座標 (x1, y1, z1) から (x2, y2, z2) までの矩形範囲を、指定されたブロック ID で埋めます。`,
-	Args:  cobra.ExactArgs(7),
+	Long:  `座標 pos1 (x,y,z) から pos2 (x,y,z) までの矩形範囲を、指定されたブロック ID で埋めます。`,
+	Args:  cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		// 引数のパース
-		x1, err1 := strconv.Atoi(args[0])
-		y1, err2 := strconv.Atoi(args[1])
-		z1, err3 := strconv.Atoi(args[2])
-		x2, err4 := strconv.Atoi(args[3])
-		y2, err5 := strconv.Atoi(args[4])
-		z2, err6 := strconv.Atoi(args[5])
-		blockID := args[6]
-
-		if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil {
-			printError("座標は整数で指定してください")
-			return
+		pos1, err := parsePos(args[0])
+		if err != nil {
+			printError(err.Error())
 		}
+		pos2, err := parsePos(args[1])
+		if err != nil {
+			printError(err.Error())
+		}
+		blockID := args[2]
 
 		// ブロック状態のパース
 		var state map[string]string
@@ -44,9 +40,9 @@ var fillCmd = &cobra.Command{
 		}
 
 		// 範囲の最小値・最大値を算出
-		minX, maxX := minMax(x1, x2)
-		minY, maxY := minMax(y1, y2)
-		minZ, maxZ := minMax(z1, z2)
+		minX, maxX := minMax(pos1[0], pos2[0])
+		minY, maxY := minMax(pos1[1], pos2[1])
+		minZ, maxZ := minMax(pos1[2], pos2[2])
 
 		// ブロックデータの生成
 		var blocks []model.BlockData

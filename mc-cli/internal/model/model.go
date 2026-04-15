@@ -15,33 +15,25 @@ func (b BlockData) ToCompact() any {
 }
 
 type AttachesData struct {
-	ComponentX int    `json:"component_x"`
-	ComponentY int    `json:"component_y"`
-	ComponentZ int    `json:"component_z"`
-	Component  string `json:"component"`
-	BaseX      int    `json:"base_x"`
-	BaseY      int    `json:"base_y"`
-	BaseZ      int    `json:"base_z"`
+	Pos       []int  `json:"pos"`
+	Component string `json:"component"`
+	Base      []int  `json:"base"`
 }
 
-// ToCompact は [Component, [ComponentX, ComponentY, ComponentZ], [BaseX, BaseY, BaseZ]] の形式に変換します。
+// ToCompact は [Component, Pos, Base] の形式に変換します。
 func (a AttachesData) ToCompact() any {
-	return []any{a.Component, []int{a.ComponentX, a.ComponentY, a.ComponentZ}, []int{a.BaseX, a.BaseY, a.BaseZ}}
+	return []any{a.Component, a.Pos, a.Base}
 }
 
 type ConnectsData struct {
-	FromX     int    `json:"from_x"`
-	FromY     int    `json:"from_y"`
-	FromZ     int    `json:"from_z"`
-	ToX       int    `json:"to_x"`
-	ToY       int    `json:"to_y"`
-	ToZ       int    `json:"to_z"`
+	From      []int  `json:"from"`
+	To        []int  `json:"to"`
 	Component string `json:"component"`
 }
 
-// ToCompact は [Component, [FromX, FromY, FromZ], [ToX, ToY, ToZ]] の形式に変換します。
+// ToCompact は [Component, From, To] の形式に変換します。
 func (c ConnectsData) ToCompact() any {
-	return []any{c.Component, []int{c.FromX, c.FromY, c.FromZ}, []int{c.ToX, c.ToY, c.ToZ}}
+	return []any{c.Component, c.From, c.To}
 }
 
 type PlaceRequest struct {

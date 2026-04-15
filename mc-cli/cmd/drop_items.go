@@ -14,18 +14,21 @@ import (
 )
 
 var (
-	dropX, dropY, dropZ float64
-	itemsInput          string
+	dropPosStr string
+	itemsInput string
 )
 
 var dropItemsCmd = &cobra.Command{
 	Use:   "drop-items",
 	Short: "アイテムを指定した座標にドロップする",
-	Long:  `JSON 配列またはファイルパス（@file.json）からアイテムデータを読み込み、指定した (x, y, z) 座標にドロップします。`,
+	Long:  `JSON 配列またはファイルパス（@file.json）からアイテムデータを読み込み、指定した --pos 座標にドロップします。`,
 	Run: func(cmd *cobra.Command, args []string) {
+		pos, err := parsePosF(dropPosStr)
+		if err != nil {
+			printError(err.Error())
+		}
 		var items []model.ItemInfo
-		var err error
-
+		// ... (reading itemsInput logic remains the same)
 		if itemsInput != "" {
 			var inputData []byte
 			if strings.HasPrefix(itemsInput, "@") {
@@ -53,12 +56,12 @@ var dropItemsCmd = &cobra.Command{
 		}
 
 		req := model.DropItemsRequest{
-			X:     dropX,
-			Y:     dropY,
-			Z:     dropZ,
+			X:     pos[0],
+			Y:     pos[1],
+			Z:     pos[2],
 			Items: items,
 		}
-
+// ... (rest of Run same)
 		jsonData, err := json.Marshal(req)
 		if err != nil {
 			printError(fmt.Sprintf("JSON エンコード失敗: %v", err))
@@ -94,8 +97,6 @@ var dropItemsCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(dropItemsCmd)
 
-	dropItemsCmd.Flags().Float64Var(&dropX, "x", 0, "ドロップ先の X 座標")
-	dropItemsCmd.Flags().Float64Var(&dropY, "y", 0, "ドロップ先の Y 座標")
-	dropItemsCmd.Flags().Float64Var(&dropZ, "z", 0, "ドロップ先の Z 座標")
+	dropItemsCmd.Flags().StringVar(&dropPosStr, "pos", "0,0,0", "ドロップ先の座標 [x,y,z]")
 	dropItemsCmd.Flags().StringVar(&itemsInput, "items", "", "アイテム情報の JSON 配列（[{\"id\":\"...\",\"amount\":...}, ...]）、または @file.json 形式のパス")
 }
