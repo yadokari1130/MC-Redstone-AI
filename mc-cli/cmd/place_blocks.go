@@ -110,15 +110,21 @@ var placeBlocksCmd = &cobra.Command{
 		var attachesBlocks []model.BlockData
 		for _, a := range req.Attaches {
 			state := make(map[string]string)
+			component := a.Component
 
 			// ブロックの種類によってプロパティを使い分ける (faceプロパティを持つタイプ)
-			isFaceType := strings.Contains(a.Component, "lever") || strings.Contains(a.Component, "button") || strings.Contains(a.Component, "grindstone")
+			isFaceType := strings.Contains(component, "lever") || strings.Contains(component, "button") || strings.Contains(component, "grindstone")
+			// レッドストーントーチの判定
+			isTorch := strings.Contains(component, "redstone_torch") || strings.Contains(component, "redstone_wall_torch")
 
 			if a.ComponentY > a.BaseY {
 				// 上面 (floor)
 				if isFaceType {
 					state["face"] = "floor"
 					state["facing"] = "north" // デフォルトの向き
+				} else if isTorch {
+					component = "minecraft:redstone_torch"
+					// 床置きトーチには facing プロパティはない
 				} else {
 					state["facing"] = "up"
 				}
@@ -127,6 +133,9 @@ var placeBlocksCmd = &cobra.Command{
 				if isFaceType {
 					state["face"] = "ceiling"
 					state["facing"] = "north" // デフォルトの向き
+				} else if isTorch {
+					// レッドストーントーチは天井には設置できないが、デフォルトで床置きとして扱うか
+					component = "minecraft:redstone_torch"
 				} else {
 					state["facing"] = "down"
 				}
@@ -146,6 +155,8 @@ var placeBlocksCmd = &cobra.Command{
 				if facing != "" {
 					if isFaceType {
 						state["face"] = "wall"
+					} else if isTorch {
+						component = "minecraft:redstone_wall_torch"
 					}
 					state["facing"] = facing
 				}
@@ -155,7 +166,7 @@ var placeBlocksCmd = &cobra.Command{
 				X:     a.ComponentX,
 				Y:     a.ComponentY,
 				Z:     a.ComponentZ,
-				Block: a.Component,
+				Block: component,
 				State: state,
 			})
 		}
@@ -180,20 +191,6 @@ var placeBlocksCmd = &cobra.Command{
 
 			state := make(map[string]string)
 			if facing != "" {
-				// リピーターとコンパレーターは facing が「入力側（背面）」を指すため、
-				// from -> to の向き（＝出力方向）とは逆に設定する必要がある。
-				if strings.Contains(c.Component, "repeater") || strings.Contains(c.Component, "comparator") {
-					switch facing {
-					case "north":
-						facing = "south"
-					case "south":
-						facing = "north"
-					case "east":
-						facing = "west"
-					case "west":
-						facing = "east"
-					}
-				}
 				state["facing"] = facing
 			}
 
