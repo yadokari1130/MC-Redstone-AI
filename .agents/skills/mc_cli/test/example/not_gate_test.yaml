@@ -1,0 +1,78 @@
+name: "NOTゲート（レッドストーントーチ）テスト"
+description: |
+  レッドストーントーチを使ったシンプルなNOTゲートの動作を検証します。
+  真理値表:
+    入力=OFF → ランプ=ON（トーチが点灯）
+    入力=ON  → ランプ=OFF（トーチが消灯）
+
+tests:
+  - name: "入力=OFF → 出力=ON（デフォルト状態）"
+    setup:
+      blocks:
+        blocks:
+          # 土台ブロック
+          - { x: 0, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 1, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 2, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 1, y: 65, z: 0, block: "minecraft:stone" }
+          # 出力ランプ
+          - { x: 3, y: 65, z: 0, block: "minecraft:redstone_lamp" }
+          # トーチ（石ブロックの東面に取り付け）
+        attaches:
+          # トーチを石ブロックに設置
+          - { component: "minecraft:redstone_wall_torch", pos: [2, 65, 0], base: [1, 65, 0]}
+          # レバーを石ブロックに設置
+          - { component: "minecraft:lever", pos: [0, 65, 0], base: [1, 65, 0] }
+        connects: []
+    steps:
+      # レバーがOFFの状態にする（デフォルトはOFFなので何もしないことが多い）
+      - action: interact_block
+        x: 0
+        y: 65
+        z: 0
+        target_state:
+          powered: "false"
+      - action: wait
+        ms: 2000
+    assert:
+      - x: 3
+        y: 65
+        z: 0
+        block: "minecraft:redstone_lamp"
+        state:
+          lit: "true"   # トーチが点灯しているのでランプON
+
+  - name: "入力=ON → 出力=OFF"
+    setup:
+      blocks:
+        blocks:
+          # 土台ブロック
+          - { x: 0, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 1, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 2, y: 64, z: 0, block: "minecraft:stone" }
+          - { x: 1, y: 65, z: 0, block: "minecraft:stone" }
+          # 出力ランプ
+          - { x: 3, y: 65, z: 0, block: "minecraft:redstone_lamp" }
+          # トーチ（石ブロックの東面に取り付け）
+        attaches:
+          # トーチを石ブロックに設置
+          - { component: "minecraft:redstone_wall_torch", pos: [2, 65, 0], base: [1, 65, 0]}
+          # レバーを石ブロックに設置
+          - { component: "minecraft:lever", pos: [0, 65, 0], base: [1, 65, 0] }
+        connects: []
+    steps:
+      - action: interact_block
+        x: 0
+        y: 65
+        z: 0
+        target_state:
+          powered: "true"   # レバーをONにする
+      - action: wait
+        ms: 200
+    assert:
+      - x: 3
+        y: 65
+        z: 0
+        block: "minecraft:redstone_lamp"
+        state:
+          lit: "false"   # トーチが消灯するのでランプOFF

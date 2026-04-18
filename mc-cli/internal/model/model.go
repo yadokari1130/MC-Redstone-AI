@@ -2,11 +2,11 @@ package model
 
 // BlockData はMinecraftのブロックの座標、種類、および状態を表します。
 type BlockData struct {
-	X     int               `json:"x"`
-	Y     int               `json:"y"`
-	Z     int               `json:"z"`
-	Block string            `json:"block"`
-	State map[string]string `json:"state,omitempty"`
+	X     int               `json:"x" yaml:"x"`
+	Y     int               `json:"y" yaml:"y"`
+	Z     int               `json:"z" yaml:"z"`
+	Block string            `json:"block" yaml:"block"`
+	State map[string]string `json:"state,omitempty" yaml:"state,omitempty"`
 }
 
 // ToCompact は [Block, [X, Y, Z], State] の形式に変換します。
@@ -15,9 +15,9 @@ func (b BlockData) ToCompact() any {
 }
 
 type AttachesData struct {
-	Pos       []int  `json:"pos"`
-	Component string `json:"component"`
-	Base      []int  `json:"base"`
+	Pos       []int  `json:"pos" yaml:"pos"`
+	Component string `json:"component" yaml:"component"`
+	Base      []int  `json:"base" yaml:"base"`
 }
 
 // ToCompact は [Component, Pos, Base] の形式に変換します。
@@ -26,9 +26,9 @@ func (a AttachesData) ToCompact() any {
 }
 
 type ConnectsData struct {
-	From      []int  `json:"from"`
-	To        []int  `json:"to"`
-	Component string `json:"component"`
+	From      []int  `json:"from" yaml:"from"`
+	To        []int  `json:"to" yaml:"to"`
+	Component string `json:"component" yaml:"component"`
 }
 
 // ToCompact は [Component, From, To] の形式に変換します。
@@ -37,9 +37,9 @@ func (c ConnectsData) ToCompact() any {
 }
 
 type PlaceRequest struct {
-	Blocks   []BlockData    `json:"blocks"`
-	Attaches []AttachesData `json:"attaches"`
-	Connects []ConnectsData `json:"connects"`
+	Blocks   []BlockData    `json:"blocks" yaml:"blocks"`
+	Attaches []AttachesData `json:"attaches" yaml:"attaches"`
+	Connects []ConnectsData `json:"connects" yaml:"connects"`
 }
 
 
