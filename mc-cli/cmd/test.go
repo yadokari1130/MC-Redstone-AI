@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"mc-cli/internal/testrunner"
 
@@ -62,7 +63,10 @@ var testCmd = &cobra.Command{
 			failed := 0
 			errorCount := 0
 
-			for _, tc := range tf.Tests {
+			for i, tc := range tf.Tests {
+				if i > 0 {
+					time.Sleep(100 * time.Millisecond)
+				}
 				result := runner.RunTest(tc)
 
 				if result.Error != "" {
