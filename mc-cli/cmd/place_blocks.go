@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"mc-cli/internal/model"
+
 	"github.com/spf13/cobra"
 )
 
@@ -176,13 +177,13 @@ var placeBlocksCmd = &cobra.Command{
 		for _, c := range req.Connects {
 			facing := ""
 			if c.To[0] > c.From[0] {
-				facing = "east"
-			} else if c.To[0] < c.From[0] {
 				facing = "west"
+			} else if c.To[0] < c.From[0] {
+				facing = "east"
 			} else if c.To[2] > c.From[2] {
-				facing = "south"
-			} else if c.To[2] < c.From[2] {
 				facing = "north"
+			} else if c.To[2] < c.From[2] {
+				facing = "south"
 			} else if c.To[1] > c.From[1] {
 				facing = "up"
 			} else if c.To[1] < c.From[1] {
