@@ -12,19 +12,16 @@ description: Minecraft の世界にアイテムをドロップエンティティ
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-mc-cli drop-items --x <x> --y <y> --z <z> --items '<JSON文字列>'
+mc-cli drop-items --pos <座標> --items '<JSON文字列>'
 ```
 
-または、ファイルを指定してドロップします。
-
+### 例: ファイルを指定してドロップ
 ```bash
-mc-cli drop-items --x <x> --y <y> --z <z> --items '@path/to/items.json'
+mc-cli drop-items --pos <座標> --items '@path/to/items.json'
 ```
 
 ### 引数
-- `--x`: アイテムをドロップする X 座標（小数値可）。
-- `--y`: アイテムをドロップする Y 座標（小数値可）。
-- `--z`: アイテムをドロップする Z 座標（小数値可）。
+- `--pos`: アイテムをドロップする座標 `"x,y,z"`（小数値可）。
 - `--items`: ドロップするアイテム情報を含む JSON 配列、または `@` を付けたファイルパス。
 
 ## 入力形式 (JSON)

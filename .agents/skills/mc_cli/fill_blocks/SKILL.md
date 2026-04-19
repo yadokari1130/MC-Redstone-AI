@@ -12,13 +12,13 @@ description: Minecraft の世界で指定した範囲を特定のブロックで
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-mc-cli fill <x1> <y1> <z1> <x2> <y2> <z2> <block> [--state '<JSON>']
+mc-cli fill <pos1> <pos2> <block> [--state '<JSON>']
 ```
 
 ### 引数
 
-- `x1, y1, z1`: 範囲の始点座標 (整数)
-- `x2, y2, z2`: 範囲の終点座標 (整数)
+- `pos1`: 範囲の始点座標 `"x,y,z"` (整数)
+- `pos2`: 範囲の終点座標 `"x,y,z"` (整数)
 - `block`: 配置するブロックの ID (例: `minecraft:stone`, `minecraft:air`)
 - `--state`: (任意) ブロックの状態を指定する JSON 文字列。配置する全てのブロックに適用されます。
 
