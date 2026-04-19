@@ -1,0 +1,12 @@
+.git/
+.gradle/
+.github/
+.vscode/
+mc-api-server/
+mc-cli/
+**/build/
+**/bin/
+node_modules/
+.codex/
+.claude/
+.agents/
