@@ -1,5 +1,5 @@
 ---
-name: minecraft_get_blocks
+name: mc_cli_get_blocks
 description: Minecraft の世界から指定した範囲のブロック情報を取得します。
 ---
 

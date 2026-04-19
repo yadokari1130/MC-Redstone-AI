@@ -1,5 +1,5 @@
 ---
-name: minecraft_set_inventory
+name: mc_cli_set_inventory
 description: 指定した座標にあるブロックのインベントリにアイテムをセットします。
 ---
 

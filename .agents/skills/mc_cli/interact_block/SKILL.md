@@ -1,5 +1,5 @@
 ---
-name: minecraft_interact_block
+name: mc_cli_interact_block
 description: 指定した座標のブロック（レバー、ボタンなど）を操作します。
 ---
 

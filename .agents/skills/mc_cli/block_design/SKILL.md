@@ -1,5 +1,5 @@
 ---
-name: minecraft_block_design
+name: mc_cli_block_design
 description: Minecraft のレッドストーン回路や構造物を設計するための、JSON データモデルの仕様と設計ガイドラインです。
 ---
 

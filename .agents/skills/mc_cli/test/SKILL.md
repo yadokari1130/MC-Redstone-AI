@@ -1,5 +1,5 @@
 ---
-name: minecraft_test
+name: mc_cli_test
 description: レッドストーン回路などの動作をYAMLファイルで宣言的にテストします。
 ---
 

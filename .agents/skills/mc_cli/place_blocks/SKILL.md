@@ -1,5 +1,5 @@
 ---
-name: minecraft_place_blocks
+name: mc_cli_place_blocks
 description: Minecraft の世界に指定したブロックを配置します。
 ---
 

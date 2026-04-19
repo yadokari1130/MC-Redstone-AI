@@ -1,5 +1,5 @@
 ---
-name: minecraft_fill_blocks
+name: mc_cli_fill_blocks
 description: Minecraft の世界で指定した範囲を特定のブロックで埋めます。
 ---
 

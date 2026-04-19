@@ -1,5 +1,5 @@
 ---
-name: minecraft_drop_items
+name: mc_cli_drop_items
 description: Minecraft の世界にアイテムをドロップエンティティとして出現させます。
 ---
 
