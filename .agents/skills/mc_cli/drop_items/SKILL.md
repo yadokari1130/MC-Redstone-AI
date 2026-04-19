@@ -12,13 +12,13 @@ description: Minecraft の世界にアイテムをドロップエンティティ
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-./mc-cli/mc-cli drop-items --x <x> --y <y> --z <z> --items '<JSON文字列>'
+mc-cli drop-items --x <x> --y <y> --z <z> --items '<JSON文字列>'
 ```
 
 または、ファイルを指定してドロップします。
 
 ```bash
-./mc-cli/mc-cli drop-items --x <x> --y <y> --z <z> --items '@path/to/items.json'
+mc-cli drop-items --x <x> --y <y> --z <z> --items '@path/to/items.json'
 ```
 
 ### 引数

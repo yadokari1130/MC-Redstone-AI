@@ -12,7 +12,7 @@ description: Minecraft の世界から指定した範囲のブロック情報を
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-./mc-cli/mc-cli get-blocks --x1 <開始X> --y1 <開始Y> --z1 <開始Z> --x2 <終了X> --y2 <終了Y> --z2 <終了Z>
+mc-cli get-blocks --x1 <開始X> --y1 <開始Y> --z1 <開始Z> --x2 <終了X> --y2 <終了Y> --z2 <終了Z>
 ```
 
 ### 引数

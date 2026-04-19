@@ -12,7 +12,7 @@ description: Minecraft の世界で指定した範囲を特定のブロックで
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-./mc-cli/mc-cli fill <x1> <y1> <z1> <x2> <y2> <z2> <block> [--state '<JSON>']
+mc-cli fill <x1> <y1> <z1> <x2> <y2> <z2> <block> [--state '<JSON>']
 ```
 
 ### 引数
@@ -26,17 +26,17 @@ description: Minecraft の世界で指定した範囲を特定のブロックで
 
 ### 指定範囲を石で埋める
 ```bash
-./mc-cli/mc-cli fill 100 60 100 110 65 110 minecraft:stone
+mc-cli fill 100 60 100 110 65 110 minecraft:stone
 ```
 
 ### 指定範囲を空気で消去する (整地)
 ```bash
-./mc-cli/mc-cli fill 100 60 100 120 80 120 minecraft:air
+mc-cli fill 100 60 100 120 80 120 minecraft:air
 ```
 
 ### 階段を特定の向きで一括配置する
 ```bash
-./mc-cli/mc-cli fill 100 64 100 100 64 110 minecraft:oak_stairs --state '{"facing":"north"}'
+mc-cli fill 100 64 100 100 64 110 minecraft:oak_stairs --state '{"facing":"north"}'
 ```
 
 ## 注意事項

@@ -12,13 +12,13 @@ description: Minecraft の世界に指定したブロックを配置します。
 `mc-cli` ツールを使用して、以下のコマンドを実行します。
 
 ```bash
-./mc-cli/mc-cli place-blocks --blocks '<JSON文字列>'
+mc-cli place-blocks --blocks '<JSON文字列>'
 ```
 
 または、ファイルを指定して配置します。
 
 ```bash
-./mc-cli/mc-cli place-blocks --blocks '@path/to/blocks.json'
+mc-cli place-blocks --blocks '@path/to/blocks.json'
 ```
 
 ### 引数
