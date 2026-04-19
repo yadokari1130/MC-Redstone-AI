@@ -176,18 +176,48 @@ var placeBlocksCmd = &cobra.Command{
 		var connectsBlocks []model.BlockData
 		for _, c := range req.Connects {
 			facing := ""
+			// repeater, comparator, observer は現在のロジック（接続元を向く）が正しい
+			// それ以外は逆（接続先を向く）にする必要がある
+			isSpecial := strings.Contains(c.Component, "repeater") ||
+				strings.Contains(c.Component, "comparator") ||
+				strings.Contains(c.Component, "observer")
+
 			if c.To[0] > c.From[0] {
-				facing = "west"
+				if isSpecial {
+					facing = "west"
+				} else {
+					facing = "east"
+				}
 			} else if c.To[0] < c.From[0] {
-				facing = "east"
+				if isSpecial {
+					facing = "east"
+				} else {
+					facing = "west"
+				}
 			} else if c.To[2] > c.From[2] {
-				facing = "north"
+				if isSpecial {
+					facing = "north"
+				} else {
+					facing = "south"
+				}
 			} else if c.To[2] < c.From[2] {
-				facing = "south"
+				if isSpecial {
+					facing = "south"
+				} else {
+					facing = "north"
+				}
 			} else if c.To[1] > c.From[1] {
-				facing = "up"
+				if isSpecial {
+					facing = "down"
+				} else {
+					facing = "up"
+				}
 			} else if c.To[1] < c.From[1] {
-				facing = "down"
+				if isSpecial {
+					facing = "up"
+				} else {
+					facing = "down"
+				}
 			}
 
 			state := make(map[string]string)
