@@ -17,8 +17,8 @@ mc-cli fill <pos1> <pos2> <block> [--state '<JSON>']
 
 ### 引数
 
-- `pos1`: 範囲の始点座標 `"x,y,z"` (整数)
-- `pos2`: 範囲の終点座標 `"x,y,z"` (整数)
+- `pos1`: 範囲の始点座標 `"x,y,z"` (整数、カンマ区切り)
+- `pos2`: 範囲の終点座標 `"x,y,z"` (整数、カンマ区切り)
 - `block`: 配置するブロックの ID (例: `minecraft:stone`, `minecraft:air`)
 - `--state`: (任意) ブロックの状態を指定する JSON 文字列。配置する全てのブロックに適用されます。
 
@@ -26,21 +26,21 @@ mc-cli fill <pos1> <pos2> <block> [--state '<JSON>']
 
 ### 指定範囲を石で埋める
 ```bash
-mc-cli fill 100 60 100 110 65 110 minecraft:stone
+mc-cli fill 100,60,100 110,65,110 minecraft:stone
 ```
 
 ### 指定範囲を空気で消去する (整地)
 ```bash
-mc-cli fill 100 60 100 120 80 120 minecraft:air
+mc-cli fill 100,60,100 120,80,120 minecraft:air
 ```
 
 ### 階段を特定の向きで一括配置する
 ```bash
-mc-cli fill 100 64 100 100 64 110 minecraft:oak_stairs --state '{"facing":"north"}'
+mc-cli fill 100,64,100 100,64,110 minecraft:oak_stairs --state '{"facing":"north"}'
 ```
 
 ## 注意事項
 
-- 指定された 2 点を対角線とする矩形範囲の全てのブロックが置き換えられます。
+- 指定された 2 点を対角線とする矩形範囲（**両端の座標を含む**）の全てのブロックが置き換えられます。
 - 範囲が非常に大きい場合、API のリクエスト制限やサーバーの負荷に注意してください。
 - 内部的には座標ごとにブロックデータを生成して一括送信しているため、標準の `/fill` コマンドと同様の感覚で利用できます。

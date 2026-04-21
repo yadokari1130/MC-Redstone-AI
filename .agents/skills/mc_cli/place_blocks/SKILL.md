@@ -27,7 +27,9 @@ mc-cli place-blocks --blocks '@path/to/blocks.json'
 
 ## 入力形式 (JSON)
 
-配置するブロックのデータ構造（`blocks`, `attaches`, `connects`）の詳細については、[block_design/SKILL.md](file:///home/yadokari/redstone_ai/.agents/skills/mc_cli/block_design/SKILL.md) を参照してください。
+配置するブロックのデータは、`blocks`, `attaches`, `connects` の3つのリストを持つオブジェクト（`PlaceRequest` 形式）です。
+
+詳細なデータモデルの仕様については、[block_design スキル](../block_design/SKILL.md) を参照してください。
 
 
 ## TIPS
