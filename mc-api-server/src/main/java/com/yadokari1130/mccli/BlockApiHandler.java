@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.redstone.Orientation;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -174,6 +175,7 @@ public class BlockApiHandler {
             try {
                 Level world = server.overworld();
                 List<String> errors = new ArrayList<>();
+                List<BlockPos> placedPositions = new ArrayList<>();
                 int successCount = 0;
 
                 for (BlockData blockData : finalBlocks) {
@@ -206,8 +208,25 @@ public class BlockApiHandler {
                     }
 
                     BlockPos pos = new BlockPos(blockData.x, blockData.y, blockData.z);
+
+                    // 設置可能かチェック (プレイヤー設置と同様の生存条件チェック)
+                    if (!state.canSurvive(world, pos)) {
+                        errors.add(String.format("(%d, %d, %d): ブロック '%s' はこの位置に設置できません。", blockData.x, blockData.y, blockData.z, blockData.block));
+                        continue;
+                    }
+
                     world.setBlock(pos, state, finalFlags);
+                    placedPositions.add(pos);
                     successCount++;
+                }
+
+                // 全ブロック配置後に handleNeighborChanged を発火させて接続状態を自然に矯正する
+                for (BlockPos p : placedPositions) {
+                    BlockState placedState = world.getBlockState(p);
+                    if (!placedState.isAir()) {
+                        Block placedBlock = placedState.getBlock();
+                        placedState.handleNeighborChanged(world, p, placedBlock, (Orientation) null, false);
+                    }
                 }
 
                 if (errors.isEmpty()) {
@@ -228,56 +247,6 @@ public class BlockApiHandler {
         }
     }
 
-    /**
-     * POST /api/update-blocks
-     * 指定された座標リストに対してブロックアップデートを強制実行する。
-     */
-    public void updateBlocks(Context ctx) throws Exception {
-        String body = ctx.body();
-        if (body == null || body.isBlank()) {
-            ctx.status(400).result("リクエストボディが空です。座標リストをJSON形式で送信してください。");
-            return;
-        }
-
-        Type listType = new TypeToken<List<BlockData>>() {}.getType();
-        List<BlockData> blocks;
-        try {
-            blocks = GSON.fromJson(body, listType);
-        } catch (Exception e) {
-            ctx.status(400).result("リクエストJSONの解析に失敗しました: " + e.getMessage());
-            return;
-        }
-
-        if (blocks == null || blocks.isEmpty()) {
-            ctx.status(400).result("座標リストが空です。");
-            return;
-        }
-
-        final List<BlockData> finalBlocks = blocks;
-
-        // メインスレッドでアップデートを実行
-        CompletableFuture<String> future = new CompletableFuture<>();
-        server.execute(() -> {
-            try {
-                Level world = server.overworld();
-                int count = 0;
-                for (BlockData b : finalBlocks) {
-                    BlockPos pos = new BlockPos(b.x, b.y, b.z);
-                    BlockState state = world.getBlockState(pos);
-                    // 自分自身を強制的に再設定して接続（配線）を計算し直させる
-                    // 3 = UPDATE_NEIGHBORS | UPDATE_CLIENTS, 16 = FORCE_STATE
-                    world.setBlock(pos, state, 3 | 16);
-                    count++;
-                }
-                future.complete("OK: " + count + "個の座標でアップデートを実行しました。");
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-        });
-
-        String result = future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        ctx.status(200).result(result);
-    }
 
     /**
      * BlockStateに指定プロパティを適用する。

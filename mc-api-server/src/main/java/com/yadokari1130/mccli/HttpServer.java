@@ -42,9 +42,6 @@ public class HttpServer {
         /** ブロックを一括配置する */
         app.post("/api/blocks", blockApiHandler::placeBlocks);
 
-        /** 指定した座標のブロックをアップデートする */
-        app.post("/api/update-blocks", blockApiHandler::updateBlocks);
-
         /** FakePlayerによるインタラクトを実行する */
         app.post("/api/interact", interactApiHandler::interact);
 
