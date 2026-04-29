@@ -38,10 +38,23 @@ func (c ConnectsData) ToCompact() any {
 	return []any{c.Component, c.From, c.To}
 }
 
+type FillsData struct {
+	From  []int             `json:"from" yaml:"from"`
+	To    []int             `json:"to" yaml:"to"`
+	Block string            `json:"block" yaml:"block"`
+	State map[string]string `json:"state,omitempty" yaml:"state,omitempty"`
+}
+
+// ToCompact は [Block, From, To, State] の形式に変換します。
+func (f FillsData) ToCompact() any {
+	return []any{f.Block, f.From, f.To, f.State}
+}
+
 type PlaceRequest struct {
 	Blocks   []BlockData    `json:"blocks" yaml:"blocks"`
 	Attaches []AttachesData `json:"attaches" yaml:"attaches"`
 	Connects []ConnectsData `json:"connects" yaml:"connects"`
+	Fills    []FillsData    `json:"fills" yaml:"fills"`
 }
 
 

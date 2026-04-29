@@ -39,12 +39,21 @@ description: API通信で利用されるブロックデータのJSONスキーマ
       "to": [12, 65, 10],
       "component": "minecraft:repeater"
     }
+  ],
+  "fills": [
+    {
+      "from": [0, 0, 0],
+      "to": [5, 5, 5],
+      "block": "minecraft:stone",
+      "state": {}
+    }
   ]
 }
 ```
 - **`blocks`**: 絶対座標指定。
 - **`attaches`**: 土台となる `base` 座標との位置関係から向きを自動計算。
 - **`connects`**: `from` と `to` の中間（距離2が必要）に向きを自動計算して配置。
+- **`fills`**: `from` と `to` で指定された矩形範囲内をすべて指定されたブロックで埋める。
 
 ## 6.3. `ItemInfo`
 アイテムIDと数量を表す。

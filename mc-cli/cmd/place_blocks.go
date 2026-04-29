@@ -241,7 +241,44 @@ var placeBlocksCmd = &cobra.Command{
 			})
 		}
 
-		// 5. APIリクエスト送信
+		// 5. fills 計算
+		for _, f := range req.Fills {
+			x1, y1, z1 := f.From[0], f.From[1], f.From[2]
+			x2, y2, z2 := f.To[0], f.To[1], f.To[2]
+
+			minX, maxX := x1, x2
+			if x1 > x2 {
+				minX, maxX = x2, x1
+			}
+			minY, maxY := y1, y2
+			if y1 > y2 {
+				minY, maxY = y2, y1
+			}
+			minZ, maxZ := z1, z2
+			if z1 > z2 {
+				minZ, maxZ = z2, z1
+			}
+
+			for x := minX; x <= maxX; x++ {
+				for y := minY; y <= maxY; y++ {
+					for z := minZ; z <= maxZ; z++ {
+						state := make(map[string]string)
+						for k, v := range f.State {
+							state[k] = v
+						}
+						req.Blocks = append(req.Blocks, model.BlockData{
+							X:     x,
+							Y:     y,
+							Z:     z,
+							Block: f.Block,
+							State: state,
+						})
+					}
+				}
+			}
+		}
+
+		// 6. APIリクエスト送信
 		if err := sendBlocks(req.Blocks); err != nil {
 			printError(fmt.Sprintf("blocks の配置に失敗しました: %v", err))
 			return
