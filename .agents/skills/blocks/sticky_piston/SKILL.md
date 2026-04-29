@@ -11,6 +11,10 @@ description: 粘着ピストン（Sticky Piston）の特性、配置方法、お
 ## プロパティ (Block States)
 - `facing`: 粘着ピストンのヘッド（動き出す面）が向いている方向を指定します。
   - 値: `down`, `up`, `north`, `south`, `west`, `east`
+  - **【重要】向きの仕様 (Minecraft準拠)**: `facing` は **「ヘッド（出力側）」** が向いている方角を指します。
+  - **具体例**:
+    - `facing: "up"` の場合：ヘッドは**上方向**へ伸びます。
+    - `facing: "east"` の場合：ヘッドは**東方向**へ伸びます。
 - `extended`: ピストンが伸びている状態かどうかを示します。
   - 値: `true` (伸びている), `false` (縮んでいる)
 
