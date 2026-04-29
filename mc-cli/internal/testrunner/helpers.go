@@ -12,6 +12,9 @@ func resolveAttaches(attaches []model.AttachesData) []model.BlockData {
 	var result []model.BlockData
 	for _, a := range attaches {
 		state := make(map[string]string)
+		for k, v := range a.State {
+			state[k] = v
+		}
 		component := a.Component
 
 		isFaceType := strings.Contains(component, "lever") ||
@@ -79,22 +82,56 @@ func resolveAttaches(attaches []model.AttachesData) []model.BlockData {
 func resolveConnects(connects []model.ConnectsData) []model.BlockData {
 	var result []model.BlockData
 	for _, c := range connects {
-		facing := ""
-		if c.To[0] > c.From[0] {
-			facing = "east"
-		} else if c.To[0] < c.From[0] {
-			facing = "west"
-		} else if c.To[2] > c.From[2] {
-			facing = "south"
-		} else if c.To[2] < c.From[2] {
-			facing = "north"
-		} else if c.To[1] > c.From[1] {
-			facing = "up"
-		} else if c.To[1] < c.From[1] {
-			facing = "down"
+		state := make(map[string]string)
+		for k, v := range c.State {
+			state[k] = v
 		}
 
-		state := make(map[string]string)
+		facing := ""
+		// repeater, comparator, observer は接続元を向く
+		// それ以外は接続先を向く
+		isSpecial := strings.Contains(c.Component, "repeater") ||
+			strings.Contains(c.Component, "comparator") ||
+			strings.Contains(c.Component, "observer")
+
+		if c.To[0] > c.From[0] {
+			if isSpecial {
+				facing = "west"
+			} else {
+				facing = "east"
+			}
+		} else if c.To[0] < c.From[0] {
+			if isSpecial {
+				facing = "east"
+			} else {
+				facing = "west"
+			}
+		} else if c.To[2] > c.From[2] {
+			if isSpecial {
+				facing = "north"
+			} else {
+				facing = "south"
+			}
+		} else if c.To[2] < c.From[2] {
+			if isSpecial {
+				facing = "south"
+			} else {
+				facing = "north"
+			}
+		} else if c.To[1] > c.From[1] {
+			if isSpecial {
+				facing = "down"
+			} else {
+				facing = "up"
+			}
+		} else if c.To[1] < c.From[1] {
+			if isSpecial {
+				facing = "up"
+			} else {
+				facing = "down"
+			}
+		}
+
 		if facing != "" {
 			state["facing"] = facing
 		}

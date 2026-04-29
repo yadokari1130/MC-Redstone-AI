@@ -15,9 +15,10 @@ func (b BlockData) ToCompact() any {
 }
 
 type AttachesData struct {
-	Pos       []int  `json:"pos" yaml:"pos"`
-	Component string `json:"component" yaml:"component"`
-	Base      []int  `json:"base" yaml:"base"`
+	Pos       []int             `json:"pos" yaml:"pos"`
+	Component string            `json:"component" yaml:"component"`
+	Base      []int             `json:"base" yaml:"base"`
+	State     map[string]string `json:"state,omitempty" yaml:"state,omitempty"`
 }
 
 // ToCompact は [Component, Pos, Base] の形式に変換します。
@@ -26,9 +27,10 @@ func (a AttachesData) ToCompact() any {
 }
 
 type ConnectsData struct {
-	From      []int  `json:"from" yaml:"from"`
-	To        []int  `json:"to" yaml:"to"`
-	Component string `json:"component" yaml:"component"`
+	From      []int             `json:"from" yaml:"from"`
+	To        []int             `json:"to" yaml:"to"`
+	Component string            `json:"component" yaml:"component"`
+	State     map[string]string `json:"state,omitempty" yaml:"state,omitempty"`
 }
 
 // ToCompact は [Component, From, To] の形式に変換します。

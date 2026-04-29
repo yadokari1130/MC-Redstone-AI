@@ -111,6 +111,9 @@ var placeBlocksCmd = &cobra.Command{
 		var attachesBlocks []model.BlockData
 		for _, a := range req.Attaches {
 			state := make(map[string]string)
+			for k, v := range a.State {
+				state[k] = v
+			}
 			component := a.Component
 
 			// ブロックの種類によってプロパティを使い分ける (faceプロパティを持つタイプ)
@@ -175,6 +178,11 @@ var placeBlocksCmd = &cobra.Command{
 		// 4. connects 計算
 		var connectsBlocks []model.BlockData
 		for _, c := range req.Connects {
+			state := make(map[string]string)
+			for k, v := range c.State {
+				state[k] = v
+			}
+
 			facing := ""
 			// repeater, comparator, observer は現在のロジック（接続元を向く）が正しい
 			// それ以外は逆（接続先を向く）にする必要がある
@@ -220,7 +228,6 @@ var placeBlocksCmd = &cobra.Command{
 				}
 			}
 
-			state := make(map[string]string)
 			if facing != "" {
 				state["facing"] = facing
 			}
