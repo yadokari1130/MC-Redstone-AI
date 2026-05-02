@@ -68,20 +68,31 @@ func (r *Runner) runSetup(setup Setup) error {
 		return nil
 	}
 
-	var req model.PlaceRequest
+	var rawData []byte
 	if setup.BlocksFile != "" {
 		data, err := os.ReadFile(setup.BlocksFile)
 		if err != nil {
 			return fmt.Errorf("ファイル読み込み失敗 (%s): %v", setup.BlocksFile, err)
 		}
-		if err := json.Unmarshal(data, &req); err != nil {
-			return fmt.Errorf("JSONパース失敗 (%s): %v", setup.BlocksFile, err)
-		}
+		rawData = data
 	} else {
-		req = *setup.Blocks
+		rawData = setup.Blocks.Data
 	}
 
-	return r.placeRequest(req)
+	reqs, err := model.ParsePlaceRequestPhases(rawData)
+	if err != nil {
+		return fmt.Errorf("PlaceRequestのパース失敗: %v", err)
+	}
+
+	for i, req := range reqs {
+		if err := r.placeRequest(req); err != nil {
+			return fmt.Errorf("セットアップフェーズ %d 失敗: %v", i+1, err)
+		}
+		if i < len(reqs)-1 {
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	return nil
 }
 
 // runStep は1つのステップを実行します。
@@ -126,21 +137,33 @@ func (r *Runner) runInteractBlock(step Step) error {
 
 // runPlaceBlocks はplace_blocksステップを実行します。
 func (r *Runner) runPlaceBlocks(step Step) error {
-	var req model.PlaceRequest
+	var rawData []byte
 	if step.BlocksFile != "" {
 		data, err := os.ReadFile(step.BlocksFile)
 		if err != nil {
 			return fmt.Errorf("ファイル読み込み失敗 (%s): %v", step.BlocksFile, err)
 		}
-		if err := json.Unmarshal(data, &req); err != nil {
-			return fmt.Errorf("JSONパース失敗 (%s): %v", step.BlocksFile, err)
-		}
+		rawData = data
 	} else if step.Blocks != nil {
-		req = *step.Blocks
+		rawData = step.Blocks.Data
 	} else {
 		return fmt.Errorf("place_blocks: blocks_file または blocks のどちらかを指定してください")
 	}
-	return r.placeRequest(req)
+
+	reqs, err := model.ParsePlaceRequestPhases(rawData)
+	if err != nil {
+		return fmt.Errorf("PlaceRequestのパース失敗: %v", err)
+	}
+
+	for i, req := range reqs {
+		if err := r.placeRequest(req); err != nil {
+			return fmt.Errorf("place_blocksフェーズ %d 失敗: %v", i+1, err)
+		}
+		if i < len(reqs)-1 {
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	return nil
 }
 
 // runFill はfillステップを実行します。
@@ -284,6 +307,43 @@ func (r *Runner) interact(x, y, z int) error {
 
 // placeRequest はPlaceRequestをAPIに送信してブロックを配置します。
 func (r *Runner) placeRequest(req model.PlaceRequest) error {
+	// fills を req.Blocks に矩形展開して追加
+	for _, f := range req.Fills {
+		x1, y1, z1 := f.From[0], f.From[1], f.From[2]
+		x2, y2, z2 := f.To[0], f.To[1], f.To[2]
+
+		minX, maxX := x1, x2
+		if x1 > x2 {
+			minX, maxX = x2, x1
+		}
+		minY, maxY := y1, y2
+		if y1 > y2 {
+			minY, maxY = y2, y1
+		}
+		minZ, maxZ := z1, z2
+		if z1 > z2 {
+			minZ, maxZ = z2, z1
+		}
+
+		for x := minX; x <= maxX; x++ {
+			for y := minY; y <= maxY; y++ {
+				for z := minZ; z <= maxZ; z++ {
+					state := make(map[string]string)
+					for k, v := range f.State {
+						state[k] = v
+					}
+					req.Blocks = append(req.Blocks, model.BlockData{
+						X:     x,
+						Y:     y,
+						Z:     z,
+						Block: f.Block,
+						State: state,
+					})
+				}
+			}
+		}
+	}
+
 	// blocksを配置
 	if err := r.sendBlocks(req.Blocks); err != nil {
 		return fmt.Errorf("blocks配置失敗: %v", err)

@@ -20,8 +20,8 @@ type TestCase struct {
 // Setup はテスト開始前に実行する回路配置設定を表します。
 // blocks_file（ファイルパス）またはblocks（JSONインライン）のどちらか一方を指定します。
 type Setup struct {
-	BlocksFile string           `yaml:"blocks_file"` // PlaceRequest形式のJSONファイルパス
-	Blocks     *model.PlaceRequest `yaml:"blocks"`      // インラインで指定するPlaceRequest
+	BlocksFile string                `yaml:"blocks_file"` // PlaceRequest形式のJSONファイルパス
+	Blocks     *model.RawPlaceRequest `yaml:"blocks"`      // インラインで指定するPlaceRequest（単一または配列）
 }
 
 // Step はテストの1つの操作ステップを表します。
@@ -39,8 +39,8 @@ type Step struct {
 	Ms int `yaml:"ms"` // 待機時間（ミリ秒）
 
 	// --- place_blocks 用 ---
-	BlocksFile string           `yaml:"blocks_file"` // PlaceRequest形式のJSONファイルパス
-	Blocks     *model.PlaceRequest `yaml:"blocks"`      // インラインで指定するPlaceRequest
+	BlocksFile string                 `yaml:"blocks_file"` // PlaceRequest形式のJSONファイルパス
+	Blocks     *model.RawPlaceRequest `yaml:"blocks"`      // インラインで指定するPlaceRequest（単一または配列）
 
 	// --- fill 用 ---
 	X1    int    `yaml:"x1"`

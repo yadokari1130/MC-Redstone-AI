@@ -1,5 +1,13 @@
 package model
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
+
 // BlockData はMinecraftのブロックの座標、種類、および状態を表します。
 type BlockData struct {
 	X     int               `json:"x" yaml:"x"`
@@ -92,4 +100,54 @@ type CommandResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message,omitempty"`
 	Data    any    `json:"data,omitempty"`
+}
+
+// RawPlaceRequest はJSON/YAMLの生バイト列を保持するヘルパー型です。
+// 単一オブジェクトと配列の両方を受け入れ、後で ParsePlaceRequestPhases で解析します。
+type RawPlaceRequest struct {
+	Data []byte
+}
+
+// UnmarshalYAML はyaml.v3ノードから生データを抽出します。
+func (r *RawPlaceRequest) UnmarshalYAML(node *yaml.Node) error {
+	var raw interface{}
+	if err := node.Decode(&raw); err != nil {
+		return err
+	}
+	data, err := json.Marshal(raw)
+	if err != nil {
+		return err
+	}
+	r.Data = data
+	return nil
+}
+
+// UnmarshalJSON はJSONバイト列をそのまま保持します。
+func (r *RawPlaceRequest) UnmarshalJSON(data []byte) error {
+	r.Data = data
+	return nil
+}
+
+// ParsePlaceRequestPhases はJSONバイト列を解析し、PlaceRequestのフェーズ配列を返します。
+// 単一オブジェクト { ... } の場合は1要素のスライスにラップします。
+// 配列 [ { ... }, { ... } ] の場合はそのまま返します。
+func ParsePlaceRequestPhases(data []byte) ([]PlaceRequest, error) {
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 {
+		return nil, fmt.Errorf("データが空です")
+	}
+
+	if data[0] == '[' {
+		var reqs []PlaceRequest
+		if err := json.Unmarshal(data, &reqs); err != nil {
+			return nil, fmt.Errorf("PlaceRequest配列のパース失敗: %w", err)
+		}
+		return reqs, nil
+	}
+
+	var req PlaceRequest
+	if err := json.Unmarshal(data, &req); err != nil {
+		return nil, fmt.Errorf("PlaceRequestのパース失敗: %w", err)
+	}
+	return []PlaceRequest{req}, nil
 }

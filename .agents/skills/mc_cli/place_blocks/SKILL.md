@@ -27,7 +27,7 @@ mc-cli place-blocks --blocks '@path/to/blocks.json'
 
 ## 入力形式 (JSON)
 
-配置するブロックのデータは、`blocks`, `attaches`, `connects` の3つのリストを持つオブジェクト（`PlaceRequest` 形式）です。
+配置するブロックのデータは、`blocks`, `attaches`, `connects`, `fills` のリストを持つオブジェクト（`PlaceRequest` 形式）です。また、**配列 `[ {...}, {...} ]` 形式（フェーズ）**も使用可能です。フェーズを使用すると、ブロック配置を複数の段階に分けて順番に実行でき、レッドストーン回路（ピストンの準接続やオブザーバーの更新検知など）で「配置順序」が重要な場合に有用です。フェーズ間には自動的に1tickの待機が入ります。
 
 詳細なデータモデルの仕様については、[block_design スキル](../block_design/SKILL.md) を参照してください。
 

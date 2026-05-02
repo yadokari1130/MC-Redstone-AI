@@ -52,14 +52,22 @@ tests:
 ```yaml
 setup:
   # ファイルパス（place-blocksで使用するPlaceRequest形式のJSONファイル）
+  # 単一オブジェクトの他、フェーズ配列 [ {...}, {...} ] も利用可能
   blocks_file: "./and_gate.json"
 
   # または、インラインでJSON構造を直接記述（どちらか一方）
+  # 単一オブジェクト形式:
   blocks:
     blocks:
       - { x: 10, y: 64, z: 10, block: "minecraft:stone" }
     attaches: []
     connects: []
+  # フェーズ（配列）形式:
+  # blocks:
+  #   - blocks:
+  #       - { x: 10, y: 64, z: 10, block: "minecraft:stone" }
+  #   - attaches:
+  #       - { pos: [10, 65, 10], component: "minecraft:lever", base: [10, 64, 10] }
 ```
 
 ---
@@ -98,12 +106,26 @@ steps:
 
 ### `place_blocks` — 途中配置
 
-テストの途中でブロックを追加配置したい場合に使用します。
+テストの途中でブロックを追加配置したい場合に使用します。`blocks` フィールドには単一オブジェクトまたはフェーズ配列のいずれかを指定できます。
 
 ```yaml
 steps:
   - action: place_blocks
-    blocks_file: "./extra.json"   # または blocks: {...}
+    blocks_file: "./extra.json"
+
+  # インライン単一オブジェクト
+  - action: place_blocks
+    blocks:
+      blocks:
+        - { x: 10, y: 64, z: 10, block: "minecraft:stone" }
+
+  # インライン配列（フェーズ）
+  - action: place_blocks
+    blocks:
+      - blocks:
+          - { x: 10, y: 64, z: 10, block: "minecraft:stone" }
+      - attaches:
+          - { pos: [10, 65, 10], component: "minecraft:lever", base: [10, 64, 10] }
 ```
 
 ### `fill` — 範囲を埋める
@@ -213,6 +235,6 @@ tests:
 ## TIPS
 
 - テストファイルは `redstone_ai/temp/` 内の適切なサブディレクトリ（例: `temp/{name}_{datetime}/`）に保存するか、回路JSONと同じディレクトリに置くのが推奨です。
-- `setup.blocks_file` には `place-blocks` コマンドで使用するのと同じ PlaceRequest 形式のJSONを指定できます。
+- `setup.blocks_file` には `place-blocks` コマンドで使用するのと同じ PlaceRequest 形式のJSON（単一オブジェクトまたはフェーズ配列）を指定できます。
 - `wait` の時間の目安: リピーター1段 ≒ 50〜100ms、複数段の場合は段数 × 100ms 程度が安全です。
 - 失敗やエラーが1件でもあった場合、終了コードが `1` になります（CI/CD連携に利用可能）。

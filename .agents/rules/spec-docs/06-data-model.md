@@ -23,6 +23,8 @@ description: API通信で利用されるブロックデータのJSONスキーマ
 
 ## 6.2. `PlaceRequest`
 `place-blocks` コマンドで受け付けるルート構造。
+
+単一オブジェクト形式:
 ```json
 {
   "blocks": [ { "x": 10, "y": 64, "z": 10, "block": "minecraft:stone" } ],
@@ -50,10 +52,31 @@ description: API通信で利用されるブロックデータのJSONスキーマ
   ]
 }
 ```
+
+フェーズ（配列）形式:
+```json
+[
+  {
+    "fills": [
+      { "from": [10, 64, 10], "to": [12, 64, 10], "block": "minecraft:stone" }
+    ]
+  },
+  {
+    "attaches": [
+      { "pos": [10, 65, 10], "component": "minecraft:lever", "base": [10, 64, 10] }
+    ],
+    "connects": [
+      { "from": [10, 65, 10], "to": [12, 65, 10], "component": "minecraft:repeater" }
+    ]
+  }
+]
+```
 - **`blocks`**: 絶対座標指定。
 - **`attaches`**: 土台となる `base` 座標との位置関係から向きを自動計算。
 - **`connects`**: `from` と `to` の中間（距離2が必要）に向きを自動計算して配置。
 - **`fills`**: `from` と `to` で指定された矩形範囲内をすべて指定されたブロックで埋める。
+
+**フェーズ機能**: 単一オブジェクトの他、配列 `[PlaceRequest]` としても受け付けます。配列の各要素（フェーズ）が順番にAPIに送信され、フェーズ間には自動的に1tickの待機が入ります。これにより、レッドストーン回路（ピストンの準接続やオブザーバーの更新検知など）で「配置される順番」が重要な場合に、正しい挙動を確保できます。
 
 ## 6.3. `ItemInfo`
 アイテムIDと数量を表す。

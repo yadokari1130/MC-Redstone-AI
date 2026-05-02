@@ -19,7 +19,7 @@ CLIツールはAIに向けて以下のコマンドを提供する。全コマン
 ## 5.2. `place-blocks`
 - **概要**: 考案したレッドストーン回路などの構造物を世界に配置する。
 - **引数**:
-  - `--blocks`: `PlaceRequest` オブジェクトのJSON文字列、または `@file.json` 形式のパス
+  - `--blocks`: `PlaceRequest` オブジェクト、またはフェーズ配列 `[PlaceRequest]` のJSON文字列。または `@file.json` 形式のパス。
 - **標準出力**: 配置結果のサマリー。
 
 ## 5.3. `interact-block`

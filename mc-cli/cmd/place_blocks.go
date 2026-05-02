@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"mc-cli/internal/model"
 
@@ -43,258 +44,268 @@ var placeBlocksCmd = &cobra.Command{
 			return
 		}
 
-		// 有効な JSON かチェック
-		var req model.PlaceRequest
-		if err := json.Unmarshal(inputData, &req); err != nil {
+		// JSONをフェーズ配列としてパース（単一オブジェクトは1要素の配列にラップ）
+		reqs, err := model.ParsePlaceRequestPhases(inputData)
+		if err != nil {
 			printError(fmt.Sprintf("JSON パース失敗: %v", err))
 			return
 		}
 
-		// 1. attaches バリデーション
-		if len(req.Attaches) > 0 {
-			minX, minY, minZ := math.MaxInt32, math.MaxInt32, math.MaxInt32
-			maxX, maxY, maxZ := math.MinInt32, math.MinInt32, math.MinInt32
+		for phaseIdx, req := range reqs {
+			// 1. attaches バリデーション
+			if len(req.Attaches) > 0 {
+				minX, minY, minZ := math.MaxInt32, math.MaxInt32, math.MaxInt32
+				maxX, maxY, maxZ := math.MinInt32, math.MinInt32, math.MinInt32
 
-			for _, a := range req.Attaches {
-				if a.Base[0] < minX { minX = a.Base[0] }
-				if a.Base[1] < minY { minY = a.Base[1] }
-				if a.Base[2] < minZ { minZ = a.Base[2] }
-				if a.Base[0] > maxX { maxX = a.Base[0] }
-				if a.Base[1] > maxY { maxY = a.Base[1] }
-				if a.Base[2] > maxZ { maxZ = a.Base[2] }
+				for _, a := range req.Attaches {
+					if a.Base[0] < minX { minX = a.Base[0] }
+					if a.Base[1] < minY { minY = a.Base[1] }
+					if a.Base[2] < minZ { minZ = a.Base[2] }
+					if a.Base[0] > maxX { maxX = a.Base[0] }
+					if a.Base[1] > maxY { maxY = a.Base[1] }
+					if a.Base[2] > maxZ { maxZ = a.Base[2] }
+				}
+
+				blocks, err := getBlocksRange(minX, minY, minZ, maxX, maxY, maxZ)
+				if err != nil {
+					printError(fmt.Sprintf("フェーズ %d: ベースブロックの取得失敗: %v", phaseIdx+1, err))
+					return
+				}
+				blockMap := make(map[string]string)
+				for _, b := range blocks {
+					key := fmt.Sprintf("%d,%d,%d", b.X, b.Y, b.Z)
+					blockMap[key] = b.Block
+				}
+
+				// リクエスト内の blocks に含まれる予定のブロックも考慮する
+				for _, b := range req.Blocks {
+					key := fmt.Sprintf("%d,%d,%d", b.X, b.Y, b.Z)
+					blockMap[key] = b.Block
+				}
+
+				for _, a := range req.Attaches {
+					key := fmt.Sprintf("%d,%d,%d", a.Base[0], a.Base[1], a.Base[2])
+					b, ok := blockMap[key]
+					if !ok || strings.Contains(b, "air") {
+						printError(fmt.Sprintf("フェーズ %d: ベースブロックが存在しません: x=%d, y=%d, z=%d", phaseIdx+1, a.Base[0], a.Base[1], a.Base[2]))
+						return
+					}
+				}
 			}
 
-			blocks, err := getBlocksRange(minX, minY, minZ, maxX, maxY, maxZ)
-			if err != nil {
-				printError(fmt.Sprintf("ベースブロックの取得失敗: %v", err))
-				return
-			}
-			blockMap := make(map[string]string)
-			for _, b := range blocks {
-				key := fmt.Sprintf("%d,%d,%d", b.X, b.Y, b.Z)
-				blockMap[key] = b.Block
-			}
+			// 2. connects バリデーション
+			for _, c := range req.Connects {
+				distX := int(math.Abs(float64(c.From[0] - c.To[0])))
+				distY := int(math.Abs(float64(c.From[1] - c.To[1])))
+				distZ := int(math.Abs(float64(c.From[2] - c.To[2])))
 
-			// リクエスト内の blocks に含まれる予定のブロックも考慮する
-			for _, b := range req.Blocks {
-				key := fmt.Sprintf("%d,%d,%d", b.X, b.Y, b.Z)
-				blockMap[key] = b.Block
-			}
-
-			for _, a := range req.Attaches {
-				key := fmt.Sprintf("%d,%d,%d", a.Base[0], a.Base[1], a.Base[2])
-				b, ok := blockMap[key]
-				if !ok || strings.Contains(b, "air") {
-					printError(fmt.Sprintf("ベースブロックが存在しません: x=%d, y=%d, z=%d", a.Base[0], a.Base[1], a.Base[2]))
+				if (distX == 2 && distY == 0 && distZ == 0) ||
+					(distX == 0 && distY == 2 && distZ == 0) ||
+					(distX == 0 && distY == 0 && distZ == 2) {
+					// OK
+				} else {
+					printError(fmt.Sprintf("フェーズ %d: connects の from と to の間がちょうど1マスではありません: from=(%d,%d,%d), to=(%d,%d,%d)", phaseIdx+1, c.From[0], c.From[1], c.From[2], c.To[0], c.To[1], c.To[2]))
 					return
 				}
 			}
-		}
 
-		// 2. connects バリデーション
-		for _, c := range req.Connects {
-			distX := int(math.Abs(float64(c.From[0] - c.To[0])))
-			distY := int(math.Abs(float64(c.From[1] - c.To[1])))
-			distZ := int(math.Abs(float64(c.From[2] - c.To[2])))
-
-			if (distX == 2 && distY == 0 && distZ == 0) ||
-				(distX == 0 && distY == 2 && distZ == 0) ||
-				(distX == 0 && distY == 0 && distZ == 2) {
-				// OK
-			} else {
-				printError(fmt.Sprintf("connects の from と to の間がちょうど1マスではありません: from=(%d,%d,%d), to=(%d,%d,%d)", c.From[0], c.From[1], c.From[2], c.To[0], c.To[1], c.To[2]))
-				return
-			}
-		}
-
-		// 3. attaches 計算
-		var attachesBlocks []model.BlockData
-		for _, a := range req.Attaches {
-			state := make(map[string]string)
-			for k, v := range a.State {
-				state[k] = v
-			}
-			component := a.Component
-
-			// ブロックの種類によってプロパティを使い分ける (faceプロパティを持つタイプ)
-			isFaceType := strings.Contains(component, "lever") || strings.Contains(component, "button") || strings.Contains(component, "grindstone")
-			// レッドストーントーチの判定
-			isTorch := strings.Contains(component, "redstone_torch") || strings.Contains(component, "redstone_wall_torch")
-
-			if a.Pos[1] > a.Base[1] {
-				// 上面 (floor)
-				if isFaceType {
-					state["face"] = "floor"
-					state["facing"] = "north" // デフォルトの向き
-				} else if isTorch {
-					component = "minecraft:redstone_torch"
-					// 床置きトーチには facing プロパティはない
-				} else {
-					state["facing"] = "up"
+			// 3. attaches 計算
+			var attachesBlocks []model.BlockData
+			for _, a := range req.Attaches {
+				state := make(map[string]string)
+				for k, v := range a.State {
+					state[k] = v
 				}
-			} else if a.Pos[1] < a.Base[1] {
-				// 下面 (ceiling)
-				if isFaceType {
-					state["face"] = "ceiling"
-					state["facing"] = "north" // デフォルトの向き
-				} else if isTorch {
-					// レッドストーントーチは天井には設置できないが、デフォルトで床置きとして扱うか
-					component = "minecraft:redstone_torch"
+				component := a.Component
+
+				// ブロックの種類によってプロパティを使い分ける (faceプロパティを持つタイプ)
+				isFaceType := strings.Contains(component, "lever") || strings.Contains(component, "button") || strings.Contains(component, "grindstone")
+				// レッドストーントーチの判定
+				isTorch := strings.Contains(component, "redstone_torch") || strings.Contains(component, "redstone_wall_torch")
+
+				if a.Pos[1] > a.Base[1] {
+					// 上面 (floor)
+					if isFaceType {
+						state["face"] = "floor"
+						state["facing"] = "north" // デフォルトの向き
+					} else if isTorch {
+						component = "minecraft:redstone_torch"
+						// 床置きトーチには facing プロパティはない
+					} else {
+						state["facing"] = "up"
+					}
+				} else if a.Pos[1] < a.Base[1] {
+					// 下面 (ceiling)
+					if isFaceType {
+						state["face"] = "ceiling"
+						state["facing"] = "north" // デフォルトの向き
+					} else if isTorch {
+						// レッドストーントーチは天井には設置できないが、デフォルトで床置きとして扱うか
+						component = "minecraft:redstone_torch"
+					} else {
+						state["facing"] = "down"
+					}
 				} else {
-					state["facing"] = "down"
+					// 側面 (wall)
+					facing := ""
+					if a.Pos[0] > a.Base[0] {
+						facing = "east"
+					} else if a.Pos[0] < a.Base[0] {
+						facing = "west"
+					} else if a.Pos[2] > a.Base[2] {
+						facing = "south"
+					} else if a.Pos[2] < a.Base[2] {
+						facing = "north"
+					}
+
+					if facing != "" {
+						if isFaceType {
+							state["face"] = "wall"
+						} else if isTorch {
+							component = "minecraft:redstone_wall_torch"
+						}
+						state["facing"] = facing
+					}
 				}
-			} else {
-				// 側面 (wall)
+
+				attachesBlocks = append(attachesBlocks, model.BlockData{
+					X:     a.Pos[0],
+					Y:     a.Pos[1],
+					Z:     a.Pos[2],
+					Block: component,
+					State: state,
+				})
+			}
+
+			// 4. connects 計算
+			var connectsBlocks []model.BlockData
+			for _, c := range req.Connects {
+				state := make(map[string]string)
+				for k, v := range c.State {
+					state[k] = v
+				}
+
 				facing := ""
-				if a.Pos[0] > a.Base[0] {
-					facing = "east"
-				} else if a.Pos[0] < a.Base[0] {
-					facing = "west"
-				} else if a.Pos[2] > a.Base[2] {
-					facing = "south"
-				} else if a.Pos[2] < a.Base[2] {
-					facing = "north"
+				// repeater, comparator, observer は現在のロジック（接続元を向く）が正しい
+				// それ以外は逆（接続先を向く）にする必要がある
+				isSpecial := strings.Contains(c.Component, "repeater") ||
+					strings.Contains(c.Component, "comparator") ||
+					strings.Contains(c.Component, "observer")
+
+				if c.To[0] > c.From[0] {
+					if isSpecial {
+						facing = "west"
+					} else {
+						facing = "east"
+					}
+				} else if c.To[0] < c.From[0] {
+					if isSpecial {
+						facing = "east"
+					} else {
+						facing = "west"
+					}
+				} else if c.To[2] > c.From[2] {
+					if isSpecial {
+						facing = "north"
+					} else {
+						facing = "south"
+					}
+				} else if c.To[2] < c.From[2] {
+					if isSpecial {
+						facing = "south"
+					} else {
+						facing = "north"
+					}
+				} else if c.To[1] > c.From[1] {
+					if isSpecial {
+						facing = "down"
+					} else {
+						facing = "up"
+					}
+				} else if c.To[1] < c.From[1] {
+					if isSpecial {
+						facing = "up"
+					} else {
+						facing = "down"
+					}
 				}
 
 				if facing != "" {
-					if isFaceType {
-						state["face"] = "wall"
-					} else if isTorch {
-						component = "minecraft:redstone_wall_torch"
-					}
 					state["facing"] = facing
 				}
+
+				connectsBlocks = append(connectsBlocks, model.BlockData{
+					X:     (c.From[0] + c.To[0]) / 2,
+					Y:     (c.From[1] + c.To[1]) / 2,
+					Z:     (c.From[2] + c.To[2]) / 2,
+					Block: c.Component,
+					State: state,
+				})
 			}
 
-			attachesBlocks = append(attachesBlocks, model.BlockData{
-				X:     a.Pos[0],
-				Y:     a.Pos[1],
-				Z:     a.Pos[2],
-				Block: component,
-				State: state,
-			})
-		}
+			// 5. fills 計算
+			for _, f := range req.Fills {
+				x1, y1, z1 := f.From[0], f.From[1], f.From[2]
+				x2, y2, z2 := f.To[0], f.To[1], f.To[2]
 
-		// 4. connects 計算
-		var connectsBlocks []model.BlockData
-		for _, c := range req.Connects {
-			state := make(map[string]string)
-			for k, v := range c.State {
-				state[k] = v
-			}
-
-			facing := ""
-			// repeater, comparator, observer は現在のロジック（接続元を向く）が正しい
-			// それ以外は逆（接続先を向く）にする必要がある
-			isSpecial := strings.Contains(c.Component, "repeater") ||
-				strings.Contains(c.Component, "comparator") ||
-				strings.Contains(c.Component, "observer")
-
-			if c.To[0] > c.From[0] {
-				if isSpecial {
-					facing = "west"
-				} else {
-					facing = "east"
+				minX, maxX := x1, x2
+				if x1 > x2 {
+					minX, maxX = x2, x1
 				}
-			} else if c.To[0] < c.From[0] {
-				if isSpecial {
-					facing = "east"
-				} else {
-					facing = "west"
+				minY, maxY := y1, y2
+				if y1 > y2 {
+					minY, maxY = y2, y1
 				}
-			} else if c.To[2] > c.From[2] {
-				if isSpecial {
-					facing = "north"
-				} else {
-					facing = "south"
+				minZ, maxZ := z1, z2
+				if z1 > z2 {
+					minZ, maxZ = z2, z1
 				}
-			} else if c.To[2] < c.From[2] {
-				if isSpecial {
-					facing = "south"
-				} else {
-					facing = "north"
-				}
-			} else if c.To[1] > c.From[1] {
-				if isSpecial {
-					facing = "down"
-				} else {
-					facing = "up"
-				}
-			} else if c.To[1] < c.From[1] {
-				if isSpecial {
-					facing = "up"
-				} else {
-					facing = "down"
-				}
-			}
 
-			if facing != "" {
-				state["facing"] = facing
-			}
-
-			connectsBlocks = append(connectsBlocks, model.BlockData{
-				X:     (c.From[0] + c.To[0]) / 2,
-				Y:     (c.From[1] + c.To[1]) / 2,
-				Z:     (c.From[2] + c.To[2]) / 2,
-				Block: c.Component,
-				State: state,
-			})
-		}
-
-		// 5. fills 計算
-		for _, f := range req.Fills {
-			x1, y1, z1 := f.From[0], f.From[1], f.From[2]
-			x2, y2, z2 := f.To[0], f.To[1], f.To[2]
-
-			minX, maxX := x1, x2
-			if x1 > x2 {
-				minX, maxX = x2, x1
-			}
-			minY, maxY := y1, y2
-			if y1 > y2 {
-				minY, maxY = y2, y1
-			}
-			minZ, maxZ := z1, z2
-			if z1 > z2 {
-				minZ, maxZ = z2, z1
-			}
-
-			for x := minX; x <= maxX; x++ {
-				for y := minY; y <= maxY; y++ {
-					for z := minZ; z <= maxZ; z++ {
-						state := make(map[string]string)
-						for k, v := range f.State {
-							state[k] = v
+				for x := minX; x <= maxX; x++ {
+					for y := minY; y <= maxY; y++ {
+						for z := minZ; z <= maxZ; z++ {
+							state := make(map[string]string)
+							for k, v := range f.State {
+								state[k] = v
+							}
+							req.Blocks = append(req.Blocks, model.BlockData{
+								X:     x,
+								Y:     y,
+								Z:     z,
+								Block: f.Block,
+								State: state,
+							})
 						}
-						req.Blocks = append(req.Blocks, model.BlockData{
-							X:     x,
-							Y:     y,
-							Z:     z,
-							Block: f.Block,
-							State: state,
-						})
 					}
 				}
 			}
-		}
 
-		// 6. APIリクエスト送信
-		if err := sendBlocks(req.Blocks); err != nil {
-			printError(fmt.Sprintf("blocks の配置に失敗しました: %v", err))
-			return
-		}
-		if err := sendBlocks(attachesBlocks); err != nil {
-			printError(fmt.Sprintf("attaches の配置に失敗しました: %v", err))
-			return
-		}
-		if err := sendBlocks(connectsBlocks); err != nil {
-			printError(fmt.Sprintf("connects の配置に失敗しました: %v", err))
-			return
+			// 6. APIリクエスト送信
+			if err := sendBlocks(req.Blocks); err != nil {
+				printError(fmt.Sprintf("フェーズ %d: blocks の配置に失敗しました: %v", phaseIdx+1, err))
+				return
+			}
+			if err := sendBlocks(attachesBlocks); err != nil {
+				printError(fmt.Sprintf("フェーズ %d: attaches の配置に失敗しました: %v", phaseIdx+1, err))
+				return
+			}
+			if err := sendBlocks(connectsBlocks); err != nil {
+				printError(fmt.Sprintf("フェーズ %d: connects の配置に失敗しました: %v", phaseIdx+1, err))
+				return
+			}
+
+			fmt.Printf("フェーズ %d/%d: blocks=%d, attaches=%d, connects=%d, fills=%d の配置に成功しました\n",
+				phaseIdx+1, len(reqs), len(req.Blocks), len(attachesBlocks), len(connectsBlocks), len(req.Fills))
+
+			// 最後のフェーズ以外は1tick待機してブロック更新を確実にする
+			if phaseIdx < len(reqs)-1 {
+				time.Sleep(50 * time.Millisecond)
+			}
 		}
 
 		printJSON(model.CommandResult{
 			Success: true,
-			Message: "ブロックの配置に成功しました",
+			Message: fmt.Sprintf("全%dフェーズのブロック配置に成功しました", len(reqs)),
 		})
 	},
 }
