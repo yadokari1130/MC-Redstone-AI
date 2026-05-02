@@ -40,20 +40,18 @@ tools: [read_file, write_file, read_many_files, activate_skill, web_fetch, googl
    - `minecraft_block_summary` を参照して適切な土台ブロックを選択してください。
 
 5. **回路JSONの生成と保存**:
-   - 設計した回路を構成するブロック情報の JSON 配列を作成してください。
-   - `redstone_ai/temp/` ディレクトリにファイルとして保存してください（存在しない場合は作成）。
-   - **ファイル命名規則**: `temp/{name}_yyyymmdd_hhmmss.json`
-     - `{name}` は回路の種類を表す英小文字のスネークケース
-     - `yyyymmdd_hhmmss` は以下のコマンドで取得した現在日時を使用してください。必ずこのコマンドを実行して日時を取得し、それをファイル名に使用してください。
-       ```bash
-       date +%Y%m%d_%H%M%S
-       ```
-   - **重要**: 既存ファイルは参照・上書きせず、必ず新しいファイル名で保存してください。同一試行サイクル内での修正時のみ、同じファイル名で上書き保存して構いません。
+    - 設計した回路を構成するブロック情報の JSON 配列を作成してください。
+    - `date +%Y%m%d_%H%M%S` コマンドを実行して現在日時を取得し、`temp/{name}_yyyymmdd_hhmmss/` という**サブディレクトリ**を作成してください（存在しない場合は作成）。
+      - `{name}` は回路の種類を表す英小文字のスネークケース
+      - 例: `temp/xor_gate_20260418_221800/`
+    - 作成したサブディレクトリ内に、**ファイル命名規則**: `{name}.json` で保存してください。
+      - 例: `temp/xor_gate_20260418_221800/xor_gate.json`
+    - **重要**: 既存ファイルは参照・上書きせず、必ず新しいディレクトリ名で保存してください。同一試行サイクル内での修正時のみ、同じファイル名で上書き保存して構いません。
 
 6. **テストYAMLの生成と保存**:
-   - `mc_cli_test` スキルを参照して、テスト YAML ファイルを作成してください。
-   - **ファイル命名規則**: `temp/{name}_test_yyyymmdd_hhmmss.yaml`
-     - `{name}` と日時は手順5と同じ値を使用してください。日時は必ず `date +%Y%m%d_%H%M%S` コマンドを実行して取得した値を使用してください。
+    - `mc_cli_test` スキルを参照して、テスト YAML ファイルを作成してください。
+    - **ファイル命名規則**: `temp/{name}_yyyymmdd_hhmmss/{name}_test.yaml`
+      - `{name}` と日時は手順5と同じ値を使用してください（`temp/{name}_yyyymmdd_hhmmss/` サブディレクトリ内に保存）。
    - `setup` には手順5で生成した JSON ファイルを指定（`blocks_file` を使用）。
    - `steps` には入力操作（レバー・ボタンのインタラクト、`wait` など）を記述。
    - `assert` には出力ブロック（レッドストーンランプなど）の期待状態を記述。
@@ -64,11 +62,11 @@ tools: [read_file, write_file, read_many_files, activate_skill, web_fetch, googl
    7.1. **回路の設置とテスト実行**:
    - 以下のコマンドを実行し、手順5の JSON ファイルを引数に渡してブロックを設置してください。
      ```bash
-     mc-cli place-blocks @temp/<filename>.json
+      mc-cli place-blocks @temp/{name}_{datetime}/<filename>.json
      ```
    - 次に、以下のコマンドを実行し、手順6の YAML ファイルでテストを実行してください。
      ```bash
-     mc-cli test temp/<filename>_test.yaml
+      mc-cli test temp/{name}_{datetime}/<filename>_test.yaml
      ```
    - これらのコマンドは**必ず実際に実行**し、出力結果（標準出力・標準エラー出力）を確認してください。コマンドが実行されていない状態で結果を推測・報告することは禁止です。
    - `mc-cli` の実行中に期待しないエラーや異常な挙動が発生した場合は、その時点で作業を中断し、直ちにユーザーへバグの可能性を報告してください。
@@ -90,7 +88,7 @@ tools: [read_file, write_file, read_many_files, activate_skill, web_fetch, googl
     - 収集した情報を分析し、原因を特定した上で次の修正手順に進んでください。
 
    7.3. **修正手順（失敗時）**:
-   - 失敗の原因を分析し、回路 JSON（`temp/` 内のファイル）を修正してください。
+   - 失敗の原因を分析し、回路 JSON（`temp/{name}_{datetime}/` 内のファイル）を修正してください。
    - まず元の設計を見直し、必要な箇所のみを修正してください。とりあえず全体をリセットすることは避け、根本的な設計ミスの場合のみリセットしてください。
    - 修正後、7.1 に戻って再試行してください。
 

@@ -212,7 +212,7 @@ tests:
 
 ## TIPS
 
-- テストファイルは `redstone_ai/temp/` に保存するか、回路JSONと同じディレクトリに置くのが推奨です。
+- テストファイルは `redstone_ai/temp/` 内の適切なサブディレクトリ（例: `temp/{name}_{datetime}/`）に保存するか、回路JSONと同じディレクトリに置くのが推奨です。
 - `setup.blocks_file` には `place-blocks` コマンドで使用するのと同じ PlaceRequest 形式のJSONを指定できます。
 - `wait` の時間の目安: リピーター1段 ≒ 50〜100ms、複数段の場合は段数 × 100ms 程度が安全です。
 - 失敗やエラーが1件でもあった場合、終了コードが `1` になります（CI/CD連携に利用可能）。
