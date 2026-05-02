@@ -8,15 +8,7 @@ set -e
 # プロジェクトのルートディレクトリに移動（スクリプトの場所に関わらず）
 cd "$(dirname "$0")/.."
 
-echo "--- Workflowsの同期を開始します ---"
-if [ -f "scripts/sync_workflows.py" ]; then
-    python3 scripts/sync_workflows.py
-else
-    echo "エラー: scripts/sync_workflows.py が見つかりません。"
-    exit 1
-fi
-
-echo -e "\n--- Skillsの同期を開始します ---"
+echo "--- Skillsの同期を開始します ---"
 # gemini skills link は指定したディレクトリ内の各スキルディレクトリ（SKILL.mdを含むもの）を認識します
 # --scope workspace を指定することで、プロジェクトローカルな .gemini/skills/ にリンクを作成します
 
