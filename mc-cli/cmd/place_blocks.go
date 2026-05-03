@@ -280,22 +280,15 @@ var placeBlocksCmd = &cobra.Command{
 				}
 			}
 
-			// 6. APIリクエスト送信
-			if err := sendBlocks(req.Blocks); err != nil {
-				printError(fmt.Sprintf("フェーズ %d: blocks の配置に失敗しました: %v", phaseIdx+1, err))
-				return
-			}
-			if err := sendBlocks(attachesBlocks); err != nil {
-				printError(fmt.Sprintf("フェーズ %d: attaches の配置に失敗しました: %v", phaseIdx+1, err))
-				return
-			}
-			if err := sendBlocks(connectsBlocks); err != nil {
-				printError(fmt.Sprintf("フェーズ %d: connects の配置に失敗しました: %v", phaseIdx+1, err))
+			// 6. APIリクエスト送信（ブロックとエンティティをまとめて送信）
+			allBlocks := append(append(req.Blocks, attachesBlocks...), connectsBlocks...)
+			if err := sendPlaceRequest(allBlocks, req.Entities); err != nil {
+				printError(fmt.Sprintf("フェーズ %d: 配置に失敗しました: %v", phaseIdx+1, err))
 				return
 			}
 
-			fmt.Printf("フェーズ %d/%d: blocks=%d, attaches=%d, connects=%d, fills=%d の配置に成功しました\n",
-				phaseIdx+1, len(reqs), len(req.Blocks), len(attachesBlocks), len(connectsBlocks), len(req.Fills))
+			fmt.Printf("フェーズ %d/%d: blocks=%d, attaches=%d, connects=%d, fills=%d, entities=%d の配置に成功しました\n",
+				phaseIdx+1, len(reqs), len(req.Blocks), len(attachesBlocks), len(connectsBlocks), len(req.Fills), len(req.Entities))
 
 			// 最後のフェーズ以外は1tick待機してブロック更新を確実にする
 			if phaseIdx < len(reqs)-1 {
@@ -335,12 +328,22 @@ func getBlocksRange(x1, y1, z1, x2, y2, z2 int) ([]model.BlockData, error) {
 	return blocks, nil
 }
 
-func sendBlocks(blocks []model.BlockData) error {
-	if len(blocks) == 0 {
+func sendPlaceRequest(blocks []model.BlockData, entities []model.EntityData) error {
+	if len(blocks) == 0 && len(entities) == 0 {
 		return nil
 	}
 
-	data, err := json.Marshal(blocks)
+	req := struct {
+		Blocks   []model.BlockData  `json:"blocks"`
+		Entities []model.EntityData `json:"entities,omitempty"`
+		Flags    int                `json:"flags"`
+	}{
+		Blocks:   blocks,
+		Entities: entities,
+		Flags:    3,
+	}
+
+	data, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -357,7 +360,7 @@ func sendBlocks(blocks []model.BlockData) error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusMultiStatus {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
 

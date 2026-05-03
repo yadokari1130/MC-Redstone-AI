@@ -15,6 +15,7 @@ var (
 	gbPos1Str, gbPos2Str string
 	interval             int
 	count                int
+	includeEntities      bool
 )
 
 var getBlocksCmd = &cobra.Command{
@@ -32,10 +33,11 @@ var getBlocksCmd = &cobra.Command{
 		}
 
 		var allResults [][]model.BlockData
+		var allResultsWithEntities []model.BlocksAndEntities
 
 		for i := 0; i < count; i++ {
-			url := fmt.Sprintf("%s/api/blocks?x1=%d&y1=%d&z1=%d&x2=%d&y2=%d&z2=%d",
-				serverURL, pos1[0], pos1[1], pos1[2], pos2[0], pos2[1], pos2[2])
+			url := fmt.Sprintf("%s/api/blocks?x1=%d&y1=%d&z1=%d&x2=%d&y2=%d&z2=%d&include_entities=%t",
+				serverURL, pos1[0], pos1[1], pos1[2], pos2[0], pos2[1], pos2[2], includeEntities)
 
 			resp, err := http.Get(url)
 			if err != nil {
@@ -55,23 +57,47 @@ var getBlocksCmd = &cobra.Command{
 				return
 			}
 
-			var blocks []model.BlockData
-			if err := json.Unmarshal(body, &blocks); err != nil {
-				printError(fmt.Sprintf("JSON デコード失敗 (回数 %d): %v", i+1, err))
-				return
+			if includeEntities {
+				// まず BlocksAndEntities 形式でパースを試みる
+				var result model.BlocksAndEntities
+				if err := json.Unmarshal(body, &result); err != nil {
+					// パース失敗した場合、レスポンスが配列（旧形式）かどうか確認
+					if len(body) > 0 && body[0] == '[' {
+						printError(fmt.Sprintf(
+							"サーバーがエンティティ取得に対応していないようです。"+
+							"Modの再ビルドとMinecraftサーバーの再起動が必要です。"+
+							"(APIレスポンスが配列形式です: %s)", string(body)))
+						return
+					}
+					printError(fmt.Sprintf("JSON デコード失敗 (回数 %d): %v", i+1, err))
+					return
+				}
+				allResultsWithEntities = append(allResultsWithEntities, result)
+			} else {
+				var blocks []model.BlockData
+				if err := json.Unmarshal(body, &blocks); err != nil {
+					printError(fmt.Sprintf("JSON デコード失敗 (回数 %d): %v", i+1, err))
+					return
+				}
+				allResults = append(allResults, blocks)
 			}
-
-			allResults = append(allResults, blocks)
 
 			if i < count-1 && interval > 0 {
 				time.Sleep(time.Duration(interval) * 50 * time.Millisecond)
 			}
 		}
 
-		printJSON(model.CommandResult{
-			Success: true,
-			Data:    allResults,
-		})
+		if includeEntities {
+			printJSON(model.CommandResult{
+				Success: true,
+				Data:    allResultsWithEntities,
+			})
+		} else {
+			printJSON(model.CommandResult{
+				Success: true,
+				Data:    allResults,
+			})
+		}
 	},
 }
 
@@ -82,4 +108,5 @@ func init() {
 	getBlocksCmd.Flags().StringVar(&gbPos2Str, "pos2", "0,0,0", "終了座標 [x,y,z]")
 	getBlocksCmd.Flags().IntVar(&interval, "interval", 0, "ゲームチック間隔 (1チック=50ms)")
 	getBlocksCmd.Flags().IntVar(&count, "count", 1, "実行回数")
+	getBlocksCmd.Flags().BoolVar(&includeEntities, "include-entities", false, "エンティティ情報も取得する")
 }

@@ -58,11 +58,30 @@ func (f FillsData) ToCompact() any {
 	return []any{f.Block, f.From, f.To, f.State}
 }
 
+// EntityData はMinecraftのエンティティ情報を表します。
+type EntityData struct {
+	UUID  string                 `json:"uuid" yaml:"uuid"`
+	Type  string                 `json:"type" yaml:"type"`
+	X     float64                `json:"x" yaml:"x"`
+	Y     float64                `json:"y" yaml:"y"`
+	Z     float64                `json:"z" yaml:"z"`
+	Yaw   float32                `json:"yaw,omitempty" yaml:"yaw,omitempty"`
+	Pitch float32                `json:"pitch,omitempty" yaml:"pitch,omitempty"`
+	NBT   map[string]interface{} `json:"nbt,omitempty" yaml:"nbt,omitempty"`
+}
+
 type PlaceRequest struct {
 	Blocks   []BlockData    `json:"blocks" yaml:"blocks"`
+	Entities []EntityData   `json:"entities,omitempty" yaml:"entities,omitempty"`
 	Attaches []AttachesData `json:"attaches" yaml:"attaches"`
 	Connects []ConnectsData `json:"connects" yaml:"connects"`
 	Fills    []FillsData    `json:"fills" yaml:"fills"`
+}
+
+// BlocksAndEntities はブロックとエンティティの両方を含むレスポンスです。
+type BlocksAndEntities struct {
+	Blocks   []BlockData  `json:"blocks" yaml:"blocks"`
+	Entities []EntityData `json:"entities" yaml:"entities"`
 }
 
 

@@ -60,6 +60,8 @@ setup:
   blocks:
     blocks:
       - { x: 10, y: 64, z: 10, block: "minecraft:stone" }
+    entities:
+      - { type: "minecraft:boat", x: 10.5, y: 64.5, z: 10.5, yaw: 90.0 }
     attaches: []
     connects: []
   # フェーズ（配列）形式:
@@ -138,6 +140,18 @@ steps:
     x1: 10  y1: 63  z1: 10
     x2: 20  y2: 65  z2: 20
     block: "minecraft:air"
+```
+
+### `kill_entities` — エンティティを削除
+
+指定した範囲内のエンティティを削除します。オプションでエンティティタイプを指定できます。
+
+```yaml
+steps:
+  - action: kill_entities
+    x1: 10  y1: 63  z1: 10
+    x2: 20  y2: 65  z2: 20
+    type: "minecraft:boat"   # 省略可。省略時はすべてのエンティティを対象とする
 ```
 
 ---

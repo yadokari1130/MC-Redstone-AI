@@ -31,15 +31,16 @@ public class HttpServer {
         BlockApiHandler blockApiHandler = new BlockApiHandler(minecraftServer);
         InteractApiHandler interactApiHandler = new InteractApiHandler(minecraftServer);
         InventoryApiHandler inventoryApiHandler = new InventoryApiHandler(minecraftServer);
+        EntityApiHandler entityApiHandler = new EntityApiHandler(minecraftServer);
 
         app = Javalin.create().start(PORT);
 
         // == エンドポイント登録 ==
 
-        /** 指定範囲のブロック情報を取得する */
+        /** 指定範囲のブロック情報を取得する（エンティティ情報もオプションで含む） */
         app.get("/api/blocks", blockApiHandler::getBlocks);
 
-        /** ブロックを一括配置する */
+        /** ブロックとエンティティを一括配置・スポーンする */
         app.post("/api/blocks", blockApiHandler::placeBlocks);
 
         /** FakePlayerによるインタラクトを実行する */
@@ -50,6 +51,9 @@ public class HttpServer {
 
         /** インベントリの内容を設定する */
         app.post("/api/inventory", inventoryApiHandler::setInventory);
+
+        /** 指定範囲のエンティティを削除する */
+        app.post("/api/kill-entities", entityApiHandler::killEntities);
 
         // グローバル例外ハンドラ
         app.exception(Exception.class, (e, ctx) -> {
